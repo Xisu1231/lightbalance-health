@@ -1,0 +1,8 @@
+frontend/node_modules/
+frontend/dist/
+backend/target/
+tools/
+.m2/
+*.log
+data/health_balance.mv.db
+data/health_balance.trace.db

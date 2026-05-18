@@ -1,0 +1,268 @@
+{
+  "profile": {
+    "name": "小明老师",
+    "handle": "@admin",
+    "goal": "恢复代谢节律，稳定体重与精力",
+    "weight": 64.6,
+    "targetWeight": 61.5,
+    "bmi": 22.8,
+    "bodyFat": 28.2,
+    "visceralFat": 7,
+    "muscleRate": 41.6,
+    "basalMetabolism": 1364,
+    "healthScore": 84,
+    "riskLevel": "低风险"
+  },
+  "todaySummary": {
+    "date": "2026-05-18",
+    "calories": 1480,
+    "calorieTarget": 1650,
+    "water": 1450,
+    "waterTarget": 2200,
+    "protein": 92,
+    "proteinTarget": 96,
+    "carbs": 156,
+    "carbsTarget": 205,
+    "fat": 39,
+    "fatTarget": 48,
+    "sleepHours": 7.3,
+    "sleepScore": 86,
+    "steps": 8630,
+    "stepTarget": 10000,
+    "workoutMinutes": 48,
+    "workoutTarget": 60,
+    "moodScore": 78,
+    "stressScore": 42
+  },
+  "trends": [
+    {
+      "date": "05-05",
+      "weight": 65.8,
+      "sleepHours": 6.4,
+      "steps": 6200,
+      "calories": 1700,
+      "stressScore": 48
+    },
+    {
+      "date": "05-06",
+      "weight": 65.5,
+      "sleepHours": 6.8,
+      "steps": 7100,
+      "calories": 1620,
+      "stressScore": 46
+    },
+    {
+      "date": "05-07",
+      "weight": 65.3,
+      "sleepHours": 7.1,
+      "steps": 8600,
+      "calories": 1580,
+      "stressScore": 44
+    },
+    {
+      "date": "05-08",
+      "weight": 65.2,
+      "sleepHours": 7.4,
+      "steps": 9200,
+      "calories": 1510,
+      "stressScore": 41
+    },
+    {
+      "date": "05-09",
+      "weight": 65,
+      "sleepHours": 7,
+      "steps": 8300,
+      "calories": 1490,
+      "stressScore": 43
+    },
+    {
+      "date": "05-10",
+      "weight": 64.9,
+      "sleepHours": 7.2,
+      "steps": 9800,
+      "calories": 1540,
+      "stressScore": 40
+    },
+    {
+      "date": "05-11",
+      "weight": 64.8,
+      "sleepHours": 7,
+      "steps": 10120,
+      "calories": 1610,
+      "stressScore": 38
+    },
+    {
+      "date": "05-12",
+      "weight": 64.9,
+      "sleepHours": 6.7,
+      "steps": 7600,
+      "calories": 1660,
+      "stressScore": 51
+    },
+    {
+      "date": "05-13",
+      "weight": 64.7,
+      "sleepHours": 7.5,
+      "steps": 10800,
+      "calories": 1520,
+      "stressScore": 39
+    },
+    {
+      "date": "05-14",
+      "weight": 64.7,
+      "sleepHours": 7.2,
+      "steps": 8800,
+      "calories": 1480,
+      "stressScore": 42
+    },
+    {
+      "date": "05-15",
+      "weight": 64.6,
+      "sleepHours": 7.1,
+      "steps": 9100,
+      "calories": 1500,
+      "stressScore": 40
+    },
+    {
+      "date": "05-16",
+      "weight": 64.5,
+      "sleepHours": 7.4,
+      "steps": 11200,
+      "calories": 1460,
+      "stressScore": 37
+    },
+    {
+      "date": "05-17",
+      "weight": 64.5,
+      "sleepHours": 7,
+      "steps": 8450,
+      "calories": 1530,
+      "stressScore": 43
+    },
+    {
+      "date": "05-18",
+      "weight": 64.6,
+      "sleepHours": 7.3,
+      "steps": 8630,
+      "calories": 1480,
+      "stressScore": 42
+    }
+  ],
+  "meals": [
+    {
+      "name": "高蛋白酸奶燕麦杯",
+      "mealType": "早餐",
+      "portion": "1 份",
+      "calories": 320,
+      "protein": 24,
+      "carbs": 36,
+      "fat": 8,
+      "eaten": true,
+      "recommendedTime": "08:10"
+    },
+    {
+      "name": "鸡胸糙米能量碗",
+      "mealType": "午餐",
+      "portion": "1 盒",
+      "calories": 510,
+      "protein": 38,
+      "carbs": 54,
+      "fat": 12,
+      "eaten": true,
+      "recommendedTime": "12:20"
+    },
+    {
+      "name": "香煎鳕鱼时蔬盘",
+      "mealType": "晚餐",
+      "portion": "1 盘",
+      "calories": 420,
+      "protein": 32,
+      "carbs": 22,
+      "fat": 15,
+      "eaten": true,
+      "recommendedTime": "18:40"
+    },
+    {
+      "name": "香蕉花生酱吐司",
+      "mealType": "加餐",
+      "portion": "1 份",
+      "calories": 230,
+      "protein": 8,
+      "carbs": 30,
+      "fat": 9,
+      "eaten": false,
+      "recommendedTime": "16:30"
+    }
+  ],
+  "workouts": [
+    {
+      "title": "代谢唤醒快走",
+      "category": "低冲击有氧",
+      "duration": 25,
+      "caloriesBurned": 170,
+      "intensity": "轻中强度",
+      "completed": true
+    },
+    {
+      "title": "核心稳定训练",
+      "category": "力量耐力",
+      "duration": 18,
+      "caloriesBurned": 110,
+      "intensity": "中强度",
+      "completed": true
+    },
+    {
+      "title": "晚间拉伸放松",
+      "category": "恢复训练",
+      "duration": 15,
+      "caloriesBurned": 40,
+      "intensity": "舒缓",
+      "completed": false
+    }
+  ],
+  "assistantConversation": [
+    {
+      "speaker": "assistant",
+      "tag": "Astra",
+      "title": "在线健康助理",
+      "content": "我已经同步了你今天的饮食、训练和恢复节奏。继续告诉我新的状态变化，我会给你更贴近当天目标的建议。",
+      "time": "08:15"
+    },
+    {
+      "speaker": "user",
+      "tag": "你",
+      "title": "综合平衡",
+      "content": "午饭后有点困，下午还要开会，怎么调整更稳？",
+      "time": "13:20"
+    },
+    {
+      "speaker": "assistant",
+      "tag": "Astra",
+      "title": "恢复建议",
+      "content": "优先补 300 到 400 ml 水，接着做 5 分钟站立伸展。你今天碳水摄入已经够用，下午加餐选无糖酸奶或一小把坚果，比再喝甜饮更稳。",
+      "time": "13:23"
+    }
+  ],
+  "insights": [
+    {
+      "title": "蛋白质接近达标",
+      "description": "距离目标还差 4 g，晚间加一杯无糖豆浆就能补齐。",
+      "tone": "good"
+    },
+    {
+      "title": "饮水还需补充",
+      "description": "今天还差 750 ml，建议拆成 3 次喝完，避免睡前一次性补水。",
+      "tone": "focus"
+    },
+    {
+      "title": "睡眠节律维持稳定",
+      "description": "最近 7 天平均睡眠 7.17 小时，恢复分数维持在较好水平。",
+      "tone": "calm"
+    }
+  ],
+  "coachPrompts": [
+    "我刚吃了一份水果酸奶，要不要补录？",
+    "今天加班，只能做 15 分钟训练，怎么安排？",
+    "我想把体脂降一点，晚餐该怎么换？"
+  ]
+}

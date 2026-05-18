@@ -1,0 +1,20 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="36" fill="#ECE8DC"/>
+  <rect x="32" y="32" width="1136" height="566" rx="28" fill="#F7F4EC"/>
+  <rect x="64" y="64" width="252" height="502" rx="24" fill="#17201D"/>
+  <rect x="344" y="96" width="792" height="118" rx="24" fill="#FFFDF8"/>
+  <rect x="344" y="238" width="498" height="156" rx="24" fill="#FFFDF8"/>
+  <rect x="862" y="238" width="274" height="156" rx="24" fill="#29414F"/>
+  <rect x="344" y="418" width="792" height="116" rx="24" fill="#FFFDF8"/>
+  <text x="92" y="160" fill="#F8F0DE" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="24" letter-spacing="5">LIGHTBALANCE</text>
+  <text x="92" y="236" fill="#FFF7E5" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="64" font-weight="700">轻享健康</text>
+  <text x="92" y="288" fill="#B8C0B8" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="24">健康风险分析与 DeepSeek 智能建议</text>
+  <text x="392" y="152" fill="#23332D" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="56" font-weight="700">适合微信分享的健康生活分析软件</text>
+  <text x="392" y="192" fill="#617069" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="24">饮食 · 训练 · 趋势 · 风险预测 · DeepSeek</text>
+  <text x="392" y="296" fill="#23332D" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="30" font-weight="700">今日概览</text>
+  <text x="392" y="340" fill="#617069" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="22">热量、饮水、睡眠、步数与恢复节律一屏查看</text>
+  <text x="904" y="296" fill="#F4F8F5" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="28" font-weight="700">DeepSeek 在线建议</text>
+  <text x="904" y="338" fill="#D3E3DB" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="20">结合当天健康数据输出可执行建议</text>
+  <text x="392" y="480" fill="#23332D" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="34" font-weight="700">Vue 3 + Spring Boot + MySQL / H2 + DeepSeek</text>
+  <text x="392" y="522" fill="#617069" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="22">移动端可读、HTTPS 可分享、公网可访问</text>
+</svg>

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: lightbalance-health
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/dashboard
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DEEPSEEK_ENABLED
+        value: true
+      - key: DEEPSEEK_MODEL
+        value: deepseek-v4-flash
+      - key: DEEPSEEK_API_KEY
+        sync: false

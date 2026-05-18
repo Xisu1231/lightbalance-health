@@ -1,0 +1,838 @@
+{
+  "dataset": {
+    "sample_count": 320,
+    "high_risk_count": 90,
+    "avg_sleep_hours": 6.72,
+    "avg_steps": 9564,
+    "avg_bmi": 24.22,
+    "avg_stress_score": 55.05
+  },
+  "models": [
+    {
+      "model": "Logistic Regression",
+      "accuracy": 0.9531,
+      "precision": 0.95,
+      "recall": 0.9048,
+      "f1": 0.9268,
+      "confusionMatrix": {
+        "tp": 19,
+        "fp": 1,
+        "tn": 42,
+        "fn": 2
+      },
+      "predictions": [
+        {
+          "id": "S261",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2162
+        },
+        {
+          "id": "S101",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0993
+        },
+        {
+          "id": "S239",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0538
+        },
+        {
+          "id": "S032",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8471
+        },
+        {
+          "id": "S199",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9607
+        },
+        {
+          "id": "S151",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S054",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S006",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1503
+        },
+        {
+          "id": "S272",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S222",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.5314
+        },
+        {
+          "id": "S177",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S220",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.3071
+        },
+        {
+          "id": "S183",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.911
+        },
+        {
+          "id": "S110",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.916
+        },
+        {
+          "id": "S075",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0075
+        },
+        {
+          "id": "S003",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9998
+        },
+        {
+          "id": "S040",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8283
+        },
+        {
+          "id": "S103",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0004
+        },
+        {
+          "id": "S119",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S215",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2936
+        },
+        {
+          "id": "S204",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0067
+        },
+        {
+          "id": "S034",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.3496
+        },
+        {
+          "id": "S218",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S182",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9922
+        },
+        {
+          "id": "S320",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9081
+        },
+        {
+          "id": "S066",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S116",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1582
+        },
+        {
+          "id": "S168",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8054
+        },
+        {
+          "id": "S212",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0001
+        },
+        {
+          "id": "S120",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0017
+        },
+        {
+          "id": "S098",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0002
+        },
+        {
+          "id": "S225",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9387
+        },
+        {
+          "id": "S007",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.001
+        },
+        {
+          "id": "S095",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0393
+        },
+        {
+          "id": "S200",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0002
+        },
+        {
+          "id": "S162",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.7324
+        },
+        {
+          "id": "S049",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0152
+        },
+        {
+          "id": "S105",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2878
+        },
+        {
+          "id": "S005",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9988
+        },
+        {
+          "id": "S310",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S318",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0002
+        },
+        {
+          "id": "S250",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9949
+        },
+        {
+          "id": "S202",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0021
+        },
+        {
+          "id": "S277",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.9547
+        },
+        {
+          "id": "S022",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0161
+        },
+        {
+          "id": "S055",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.059
+        },
+        {
+          "id": "S051",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S063",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8402
+        },
+        {
+          "id": "S030",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0198
+        },
+        {
+          "id": "S258",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 1
+        },
+        {
+          "id": "S265",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0033
+        },
+        {
+          "id": "S229",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.4166
+        },
+        {
+          "id": "S271",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1566
+        },
+        {
+          "id": "S074",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1391
+        },
+        {
+          "id": "S180",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S302",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.004
+        },
+        {
+          "id": "S002",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0002
+        },
+        {
+          "id": "S306",
+          "actual": "LOW",
+          "predicted": "HIGH",
+          "probability": 0.9115
+        },
+        {
+          "id": "S270",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.5069
+        },
+        {
+          "id": "S071",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.3404
+        },
+        {
+          "id": "S289",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8563
+        },
+        {
+          "id": "S298",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S297",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0708
+        },
+        {
+          "id": "S134",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.0015
+        }
+      ]
+    },
+    {
+      "model": "KNN (k=7)",
+      "accuracy": 0.7344,
+      "precision": 0.75,
+      "recall": 0.2857,
+      "f1": 0.4138,
+      "confusionMatrix": {
+        "tp": 6,
+        "fp": 2,
+        "tn": 41,
+        "fn": 15
+      },
+      "predictions": [
+        {
+          "id": "S261",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S101",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S239",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S032",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.7143
+        },
+        {
+          "id": "S199",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.4286
+        },
+        {
+          "id": "S151",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S054",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S006",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S272",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S222",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S177",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S220",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.4286
+        },
+        {
+          "id": "S183",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S110",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S075",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S003",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8571
+        },
+        {
+          "id": "S040",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S103",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S119",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S215",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S204",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S034",
+          "actual": "LOW",
+          "predicted": "HIGH",
+          "probability": 0.7143
+        },
+        {
+          "id": "S218",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S182",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.7143
+        },
+        {
+          "id": "S320",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S066",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S116",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S168",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S212",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S120",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S098",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S225",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.4286
+        },
+        {
+          "id": "S007",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S095",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.4286
+        },
+        {
+          "id": "S200",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S162",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S049",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S105",
+          "actual": "LOW",
+          "predicted": "HIGH",
+          "probability": 0.5714
+        },
+        {
+          "id": "S005",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.4286
+        },
+        {
+          "id": "S310",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S318",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S250",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8571
+        },
+        {
+          "id": "S202",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S277",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.4286
+        },
+        {
+          "id": "S022",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S055",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S051",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S063",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.4286
+        },
+        {
+          "id": "S030",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S258",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.8571
+        },
+        {
+          "id": "S265",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S229",
+          "actual": "HIGH",
+          "predicted": "HIGH",
+          "probability": 0.5714
+        },
+        {
+          "id": "S271",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S074",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S180",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S302",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S002",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S306",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        },
+        {
+          "id": "S270",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S071",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S289",
+          "actual": "HIGH",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S298",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0
+        },
+        {
+          "id": "S297",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.2857
+        },
+        {
+          "id": "S134",
+          "actual": "LOW",
+          "predicted": "LOW",
+          "probability": 0.1429
+        }
+      ]
+    }
+  ],
+  "selectedModel": "Logistic Regression",
+  "bmiBands": [
+    {
+      "label": "BMI<20",
+      "highRiskRate": 16.33,
+      "count": 49
+    },
+    {
+      "label": "20-24",
+      "highRiskRate": 22.61,
+      "count": 115
+    },
+    {
+      "label": "24-28",
+      "highRiskRate": 34,
+      "count": 100
+    },
+    {
+      "label": "BMI>=28",
+      "highRiskRate": 39.29,
+      "count": 56
+    }
+  ],
+  "narrative": [
+    "睡眠不足、步数偏低、压力偏高与高风险标签呈显著同向关系。",
+    "逻辑回归在模拟健康数据上表现更稳定，便于解释各项特征如何影响风险概率。",
+    "KNN 对局部样本模式较敏感，但在高压力与高 BMI 交叉区域更容易受邻居分布波动影响。"
+  ]
+}

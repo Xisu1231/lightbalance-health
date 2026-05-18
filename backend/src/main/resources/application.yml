@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: health-balance-backend
+  datasource:
+    url: jdbc:h2:file:./data/health_balance;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+server:
+  port: ${PORT:8088}
+  forward-headers-strategy: framework
+
+app:
+  cors-origin: http://localhost:5173
+
+deepseek:
+  enabled: ${DEEPSEEK_ENABLED:true}
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+  model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+  max-tokens: ${DEEPSEEK_MAX_TOKENS:900}
+  thinking-enabled: ${DEEPSEEK_THINKING_ENABLED:false}
+  reasoning-effort: ${DEEPSEEK_REASONING_EFFORT:high}
+  timeout-seconds: ${DEEPSEEK_TIMEOUT_SECONDS:45}
+  max-history-messages: ${DEEPSEEK_MAX_HISTORY_MESSAGES:12}
