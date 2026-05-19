@@ -35,8 +35,33 @@ public class DashboardController {
         return dashboardService.addWater(request.amount());
     }
 
+    @PostMapping("/profile")
+    public AppDtos.DashboardResponse updateProfile(@Valid @RequestBody AppDtos.ProfileUpdateRequest request) {
+        return dashboardService.updateProfile(request);
+    }
+
+    @PostMapping("/checkin")
+    public AppDtos.DashboardResponse updateCheckin(@Valid @RequestBody AppDtos.DailyCheckinRequest request) {
+        return dashboardService.updateCheckin(request);
+    }
+
+    @PostMapping("/meals")
+    public AppDtos.DashboardResponse createMeal(@Valid @RequestBody AppDtos.MealCreateRequest request) {
+        return dashboardService.createMeal(request);
+    }
+
     @PostMapping("/workouts/{workoutId}/toggle")
     public AppDtos.DashboardResponse toggleWorkout(@PathVariable Long workoutId) {
         return dashboardService.toggleWorkout(workoutId);
+    }
+
+    @PostMapping("/workouts")
+    public AppDtos.DashboardResponse createWorkout(@Valid @RequestBody AppDtos.WorkoutCreateRequest request) {
+        return dashboardService.createWorkout(request);
+    }
+
+    @PostMapping("/trends")
+    public AppDtos.DashboardResponse createTrend(@Valid @RequestBody AppDtos.TrendCreateRequest request) {
+        return dashboardService.createTrend(request);
     }
 }

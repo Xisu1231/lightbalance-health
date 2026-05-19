@@ -114,6 +114,62 @@ public final class AppDtos {
     public record WaterRequest(int amount) {
     }
 
+    public record ProfileUpdateRequest(
+        String name,
+        String handle,
+        String goal,
+        double weight,
+        double targetWeight,
+        double bodyFat,
+        double visceralFat,
+        double muscleRate
+    ) {
+    }
+
+    public record DailyCheckinRequest(
+        int calorieTarget,
+        int waterTarget,
+        int stepTarget,
+        int workoutTarget,
+        double sleepHours,
+        int steps,
+        int moodScore,
+        int stressScore
+    ) {
+    }
+
+    public record MealCreateRequest(
+        String name,
+        String mealType,
+        String portion,
+        int calories,
+        int protein,
+        int carbs,
+        int fat,
+        String recommendedTime,
+        boolean eaten
+    ) {
+    }
+
+    public record WorkoutCreateRequest(
+        String title,
+        String category,
+        int duration,
+        int caloriesBurned,
+        String intensity
+    ) {
+    }
+
+    public record TrendCreateRequest(
+        String recordDate,
+        double weight,
+        double sleepHours,
+        int steps,
+        int calories,
+        int stressScore
+    ) {
+    }
+
     public record AnalyticsResponse(
         DatasetSummary datasetSummary,
         List<ModelMetric> models,

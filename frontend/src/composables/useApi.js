@@ -11,7 +11,22 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    let detail = `Request failed: ${response.status}`;
+    try {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const payload = await response.json();
+        detail = payload.message || payload.error || JSON.stringify(payload);
+      } else {
+        const text = await response.text();
+        if (text) {
+          detail = text;
+        }
+      }
+    } catch {
+      // ignore parse errors and fall back to status-based message
+    }
+    throw new Error(detail);
   }
 
   return response.json();

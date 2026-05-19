@@ -10,7 +10,6 @@
   --olive-800: #27312d;
   --olive-700: #34433d;
   --olive-500: #5c8a78;
-  --olive-300: #a8d2bc;
   --cream-100: #f6f2e8;
   --cream-200: #efe8d7;
   --cream-300: #e7dfcd;
@@ -32,12 +31,19 @@ body {
 }
 
 button,
-textarea {
+textarea,
+input,
+select {
   font: inherit;
 }
 
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 #app {
@@ -71,22 +77,13 @@ button {
 
 .brand-block h1 {
   margin: 10px 0 8px;
-  font-size: 44px;
+  font-size: 42px;
   color: #faf3de;
 }
 
 .brand-block p,
 .brand-kicker,
-.nav-item span,
-.profile-chip span,
-.subcopy,
-.kicker,
-.stat-tile small,
-.summary-chip span,
-.body-kpi span,
-.message-meta span,
-.workout-card span,
-.meal-card span {
+.nav-item span {
   color: rgba(241, 239, 231, 0.72);
 }
 
@@ -119,7 +116,6 @@ button {
 
 .nav-item strong,
 .profile-chip strong,
-.stat-tile strong,
 .panel h3,
 .message-meta strong,
 .insight-card strong,
@@ -128,7 +124,8 @@ button {
 .meal-card strong,
 .workout-card strong,
 .body-kpi strong,
-.summary-chip strong {
+.summary-chip strong,
+.stat-tile strong {
   display: block;
 }
 
@@ -196,7 +193,10 @@ button {
 .message-meta span,
 .workout-card span,
 .meal-card span,
-.panel .kicker {
+.panel .kicker,
+.section-note,
+.trend-item span,
+.form-field small {
   color: #64726c;
 }
 
@@ -219,6 +219,33 @@ button {
   color: #38614d;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.score-pill--soft {
+  background: rgba(36, 51, 47, 0.08);
+  color: #34433d;
+}
+
+.notice-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(52, 67, 61, 0.08);
+  box-shadow: var(--shadow);
+}
+
+.notice-banner--success {
+  background: rgba(217, 242, 226, 0.9);
+  color: #244737;
+}
+
+.notice-banner--error {
+  background: rgba(250, 226, 220, 0.92);
+  color: #753f31;
 }
 
 .band {
@@ -275,11 +302,16 @@ button {
   color: #24332f;
 }
 
+.section-note {
+  margin: 8px 0 0;
+}
+
 .stats-grid,
 .portrait-grid,
 .dataset-grid,
 .model-grid,
-.confusion-grid {
+.confusion-grid,
+.editor-grid {
   display: grid;
   gap: 14px;
 }
@@ -287,6 +319,11 @@ button {
 .stats-grid,
 .portrait-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stats-grid--four,
+.portrait-grid--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .dataset-grid {
@@ -302,6 +339,10 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.editor-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .stat-tile,
 .summary-chip,
 .body-kpi,
@@ -309,7 +350,8 @@ button {
 .confusion-card,
 .insight-card,
 .meal-card,
-.workout-card {
+.workout-card,
+.trend-item {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -344,7 +386,10 @@ button {
 .meal-card button,
 .workout-card button,
 .composer button,
-.prompt-button {
+.prompt-button,
+.primary-button,
+.secondary-button,
+.ghost-button {
   border: none;
   border-radius: 8px;
   padding: 10px 14px;
@@ -353,10 +398,27 @@ button {
   font-weight: 600;
 }
 
+.primary-button,
+.secondary-button,
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.secondary-button {
+  background: linear-gradient(135deg, #31586b 0%, #436a5a 100%);
+}
+
+.ghost-button {
+  background: rgba(36, 51, 47, 0.08);
+  color: #31433d;
+}
+
 .meal-card button:disabled {
   background: #d9e0d7;
   color: #5e6b65;
-  cursor: default;
 }
 
 .workout-card button.done {
@@ -415,7 +477,9 @@ button {
 
 .insight-stack,
 .workout-stack,
-.message-stack {
+.message-stack,
+.summary-strip,
+.trend-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -435,7 +499,7 @@ button {
 }
 
 .summary-chip--large {
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .narrative-list {
@@ -503,7 +567,6 @@ button {
 
 .assistant-runtime {
   margin: 8px 0 0;
-  color: #66746d;
   font-size: 14px;
 }
 
@@ -521,19 +584,82 @@ button {
 
 .composer {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px;
+  grid-template-columns: minmax(0, 1fr) 180px;
   gap: 14px;
   margin-top: 18px;
 }
 
-.composer textarea {
-  resize: vertical;
-  min-height: 100px;
+.composer textarea,
+.form-field input,
+.form-field select {
   border-radius: 8px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.9);
   padding: 14px;
   color: #24332f;
+}
+
+.composer textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.chip-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.form-field,
+.form-check {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #3d4c46;
+}
+
+.form-field span,
+.form-check span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-field input[type="range"] {
+  padding: 0;
+}
+
+.form-field--wide,
+.form-check--wide,
+.form-actions--full {
+  grid-column: 1 / -1;
+}
+
+.form-check {
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 2px 0;
+}
+
+.form-check input {
+  inline-size: 18px;
+  block-size: 18px;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.water-inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.trend-item {
+  gap: 4px;
 }
 
 .loading-state {
@@ -610,11 +736,16 @@ button {
   .section-grid,
   .section-grid--wide,
   .stats-grid,
+  .stats-grid--four,
   .portrait-grid,
+  .portrait-grid--four,
   .dataset-grid,
   .model-grid,
   .confusion-grid,
-  .meal-grid {
+  .meal-grid,
+  .editor-grid,
+  .water-inline,
+  .composer {
     grid-template-columns: 1fr;
   }
 
@@ -626,7 +757,8 @@ button {
     font-size: 24px;
   }
 
-  .profile-chip {
+  .profile-chip,
+  .notice-banner {
     width: 100%;
     justify-content: space-between;
     flex-wrap: wrap;
@@ -636,11 +768,9 @@ button {
     min-height: 280px;
   }
 
-  .composer {
-    grid-template-columns: 1fr;
-  }
-
-  .composer button {
+  .composer button,
+  .form-actions .primary-button,
+  .water-inline .secondary-button {
     width: 100%;
   }
 
@@ -708,7 +838,8 @@ button {
   .confusion-card,
   .insight-card,
   .meal-card,
-  .workout-card {
+  .workout-card,
+  .trend-item {
     padding: 14px;
   }
 
