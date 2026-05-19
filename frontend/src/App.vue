@@ -357,9 +357,15 @@
                   <span>{{ meal.mealType }} · {{ meal.portion }} · {{ meal.recommendedTime }}</span>
                 </div>
                 <small>{{ meal.calories }} kcal · P{{ meal.protein }} C{{ meal.carbs }} F{{ meal.fat }}</small>
-                <button :disabled="meal.eaten || busy.mealConsume" @click="consumeMeal(meal.id)">
-                  {{ meal.eaten ? '已记入今日' : '记录到今天' }}
-                </button>
+                <div class="card-actions">
+                  <button :disabled="meal.eaten || busy.mealConsume" @click="consumeMeal(meal.id)">
+                    {{ meal.eaten ? '已记入今日' : '记录到今天' }}
+                  </button>
+                  <button class="danger-button" :disabled="busy.mealDelete" @click="deleteMeal(meal.id)">
+                    <Trash2 :size="15" />
+                    <span>删除</span>
+                  </button>
+                </div>
               </article>
             </div>
           </section>
@@ -441,9 +447,15 @@
                   <span>{{ plan.category }} · {{ plan.intensity }}</span>
                 </div>
                 <small>{{ plan.duration }} min · 约 {{ plan.caloriesBurned }} kcal</small>
-                <button :class="{ done: plan.completed }" @click="toggleWorkout(plan.id)" :disabled="busy.workoutToggle">
-                  {{ plan.completed ? '已完成，点此撤销' : '标记完成' }}
-                </button>
+                <div class="card-actions">
+                  <button :class="{ done: plan.completed }" @click="toggleWorkout(plan.id)" :disabled="busy.workoutToggle">
+                    {{ plan.completed ? '已完成，点此撤销' : '标记完成' }}
+                  </button>
+                  <button class="danger-button" :disabled="busy.workoutDelete" @click="deleteWorkout(plan.id)">
+                    <Trash2 :size="15" />
+                    <span>删除</span>
+                  </button>
+                </div>
               </article>
             </div>
           </section>
@@ -574,6 +586,28 @@
           <section class="panel">
             <div class="panel-head">
               <div>
+                <p class="kicker">DeepSeek Trend Coach</p>
+                <h3>趋势智能建议</h3>
+                <p class="section-note">点击后会把最近趋势交给 DeepSeek，生成一段适合当前状态的行动建议。</p>
+              </div>
+            </div>
+
+            <div class="ai-advice-box">
+              <p>{{ trendAdvice.advice || '还没有生成趋势建议。你可以先补录今天的数据，再让 DeepSeek 判断接下来怎么调整。' }}</p>
+              <small v-if="trendAdvice.generatedAt">
+                {{ trendAdvice.runtime.provider }} · {{ trendAdvice.runtime.model }} · {{ trendAdvice.generatedAt }}
+              </small>
+            </div>
+
+            <button class="primary-button" @click="generateTrendAdvice" :disabled="busy.trendAdvice">
+              <Sparkles :size="16" />
+              <span>{{ busy.trendAdvice ? '分析中...' : '生成趋势建议' }}</span>
+            </button>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
                 <p class="kicker">Model Compare</p>
                 <h3>模型评估结果</h3>
               </div>
@@ -686,6 +720,7 @@ import {
   Save,
   Sparkles,
   Target,
+  Trash2,
 } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import BaseChart from './components/BaseChart.vue';
@@ -725,10 +760,23 @@ const busy = reactive({
   checkin: false,
   meal: false,
   mealConsume: false,
+  mealDelete: false,
   workout: false,
   workoutToggle: false,
+  workoutDelete: false,
   trend: false,
+  trendAdvice: false,
   water: false,
+});
+
+const trendAdvice = reactive({
+  advice: '',
+  generatedAt: '',
+  runtime: {
+    provider: 'DeepSeek',
+    model: '',
+    status: '',
+  },
 });
 
 const profileForm = reactive({
@@ -1036,6 +1084,10 @@ async function consumeMeal(id) {
   await runDashboardAction('mealConsume', () => api.post(`/api/dashboard/meals/${id}/consume`), '餐食已经记入今日摄入。');
 }
 
+async function deleteMeal(id) {
+  await runDashboardAction('mealDelete', () => api.delete(`/api/dashboard/meals/${id}`), '餐食已删除，今日营养数据已同步更新。');
+}
+
 async function addWater(amount) {
   const safeAmount = Number(amount) || 0;
   if (safeAmount <= 0) {
@@ -1047,6 +1099,10 @@ async function addWater(amount) {
 
 async function toggleWorkout(id) {
   await runDashboardAction('workoutToggle', () => api.post(`/api/dashboard/workouts/${id}/toggle`), '训练完成状态已更新。');
+}
+
+async function deleteWorkout(id) {
+  await runDashboardAction('workoutDelete', () => api.delete(`/api/dashboard/workouts/${id}`), '训练计划已删除，完成时长已同步更新。');
 }
 
 async function saveProfile() {
@@ -1089,6 +1145,19 @@ async function saveTrend() {
     () => api.post('/api/dashboard/trends', trendForm),
     '趋势数据已补录。'
   );
+}
+
+async function generateTrendAdvice() {
+  busy.trendAdvice = true;
+  try {
+    const response = await api.post('/api/assistant/trend-advice');
+    Object.assign(trendAdvice, response);
+    showNotice('趋势建议已生成。', 'success');
+  } catch (error) {
+    showNotice(error.message || '趋势建议生成失败，请稍后再试。', 'error');
+  } finally {
+    busy.trendAdvice = false;
+  }
 }
 
 async function sendMessage() {

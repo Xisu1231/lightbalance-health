@@ -250,4 +250,11 @@ public final class AppDtos {
         String status
     ) {
     }
+
+    public record TrendAdviceResponse(
+        String advice,
+        AssistantRuntime runtime,
+        String generatedAt
+    ) {
+    }
 }

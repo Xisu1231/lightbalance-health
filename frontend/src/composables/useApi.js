@@ -40,5 +40,9 @@ export function useApi() {
         method: 'POST',
         body: body ? JSON.stringify(body) : undefined,
       }),
+    delete: (path) =>
+      request(path, {
+        method: 'DELETE',
+      }),
   };
 }

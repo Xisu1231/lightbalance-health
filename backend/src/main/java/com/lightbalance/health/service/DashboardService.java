@@ -149,6 +149,19 @@ public class DashboardService {
     }
 
     @Transactional
+    public AppDtos.DashboardResponse deleteMeal(Long mealId) {
+        MealEntry meal = mealEntryRepository.findById(mealId).orElseThrow();
+        if (meal.isEaten()) {
+            DailySummary summary = getLatestSummary();
+            removeMeal(summary, meal);
+            dailySummaryRepository.save(summary);
+            refreshProfileSignals(summary);
+        }
+        mealEntryRepository.delete(meal);
+        return getDashboard();
+    }
+
+    @Transactional
     public AppDtos.DashboardResponse addWater(int amount) {
         DailySummary summary = getLatestSummary();
         summary.setWater(Math.max(0, summary.getWater() + Math.max(0, amount)));
@@ -171,6 +184,19 @@ public class DashboardService {
         workoutPlanRepository.save(workout);
         dailySummaryRepository.save(summary);
         refreshProfileSignals(summary);
+        return getDashboard();
+    }
+
+    @Transactional
+    public AppDtos.DashboardResponse deleteWorkout(Long workoutId) {
+        WorkoutPlan workout = workoutPlanRepository.findById(workoutId).orElseThrow();
+        if (workout.isCompleted()) {
+            DailySummary summary = getLatestSummary();
+            summary.setWorkoutMinutes(Math.max(0, summary.getWorkoutMinutes() - workout.getDuration()));
+            dailySummaryRepository.save(summary);
+            refreshProfileSignals(summary);
+        }
+        workoutPlanRepository.delete(workout);
         return getDashboard();
     }
 
@@ -296,6 +322,13 @@ public class DashboardService {
         summary.setProtein(summary.getProtein() + meal.getProtein());
         summary.setCarbs(summary.getCarbs() + meal.getCarbs());
         summary.setFat(summary.getFat() + meal.getFat());
+    }
+
+    private void removeMeal(DailySummary summary, MealEntry meal) {
+        summary.setCalories(Math.max(0, summary.getCalories() - meal.getCalories()));
+        summary.setProtein(Math.max(0, summary.getProtein() - meal.getProtein()));
+        summary.setCarbs(Math.max(0, summary.getCarbs() - meal.getCarbs()));
+        summary.setFat(Math.max(0, summary.getFat() - meal.getFat()));
     }
 
     private void refreshProfileSignals(DailySummary summary) {

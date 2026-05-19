@@ -1,6 +1,6 @@
 {
   "profile": {
-    "name": "小明老师",
+    "name": "思明老师",
     "handle": "@admin",
     "goal": "恢复代谢节律，稳定体重与精力",
     "weight": 64.6,
@@ -14,7 +14,7 @@
     "riskLevel": "低风险"
   },
   "todaySummary": {
-    "date": "2026-05-18",
+    "date": "2026-05-19",
     "calories": 1480,
     "calorieTarget": 1650,
     "water": 1450,
@@ -36,7 +36,7 @@
   },
   "trends": [
     {
-      "date": "05-05",
+      "date": "05-06",
       "weight": 65.8,
       "sleepHours": 6.4,
       "steps": 6200,
@@ -44,7 +44,7 @@
       "stressScore": 48
     },
     {
-      "date": "05-06",
+      "date": "05-07",
       "weight": 65.5,
       "sleepHours": 6.8,
       "steps": 7100,
@@ -52,7 +52,7 @@
       "stressScore": 46
     },
     {
-      "date": "05-07",
+      "date": "05-08",
       "weight": 65.3,
       "sleepHours": 7.1,
       "steps": 8600,
@@ -60,7 +60,7 @@
       "stressScore": 44
     },
     {
-      "date": "05-08",
+      "date": "05-09",
       "weight": 65.2,
       "sleepHours": 7.4,
       "steps": 9200,
@@ -68,7 +68,7 @@
       "stressScore": 41
     },
     {
-      "date": "05-09",
+      "date": "05-10",
       "weight": 65,
       "sleepHours": 7,
       "steps": 8300,
@@ -76,7 +76,7 @@
       "stressScore": 43
     },
     {
-      "date": "05-10",
+      "date": "05-11",
       "weight": 64.9,
       "sleepHours": 7.2,
       "steps": 9800,
@@ -84,7 +84,7 @@
       "stressScore": 40
     },
     {
-      "date": "05-11",
+      "date": "05-12",
       "weight": 64.8,
       "sleepHours": 7,
       "steps": 10120,
@@ -92,7 +92,7 @@
       "stressScore": 38
     },
     {
-      "date": "05-12",
+      "date": "05-13",
       "weight": 64.9,
       "sleepHours": 6.7,
       "steps": 7600,
@@ -100,7 +100,7 @@
       "stressScore": 51
     },
     {
-      "date": "05-13",
+      "date": "05-14",
       "weight": 64.7,
       "sleepHours": 7.5,
       "steps": 10800,
@@ -108,7 +108,7 @@
       "stressScore": 39
     },
     {
-      "date": "05-14",
+      "date": "05-15",
       "weight": 64.7,
       "sleepHours": 7.2,
       "steps": 8800,
@@ -116,7 +116,7 @@
       "stressScore": 42
     },
     {
-      "date": "05-15",
+      "date": "05-16",
       "weight": 64.6,
       "sleepHours": 7.1,
       "steps": 9100,
@@ -124,7 +124,7 @@
       "stressScore": 40
     },
     {
-      "date": "05-16",
+      "date": "05-17",
       "weight": 64.5,
       "sleepHours": 7.4,
       "steps": 11200,
@@ -132,7 +132,7 @@
       "stressScore": 37
     },
     {
-      "date": "05-17",
+      "date": "05-18",
       "weight": 64.5,
       "sleepHours": 7,
       "steps": 8450,
@@ -140,7 +140,7 @@
       "stressScore": 43
     },
     {
-      "date": "05-18",
+      "date": "05-19",
       "weight": 64.6,
       "sleepHours": 7.3,
       "steps": 8630,

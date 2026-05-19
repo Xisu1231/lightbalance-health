@@ -13,11 +13,14 @@ import com.lightbalance.health.repo.UserProfileRepository;
 import com.lightbalance.health.repo.WorkoutPlanRepository;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    private static final ZoneId APP_ZONE = ZoneId.of("Asia/Shanghai");
 
     private final ResourceDataLoader resourceDataLoader;
     private final UserProfileRepository userProfileRepository;
@@ -45,6 +48,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (userProfileRepository.count() > 0) {
+            migrateExistingDemoData();
             return;
         }
 
@@ -66,7 +70,8 @@ public class DataInitializer implements CommandLineRunner {
         userProfileRepository.save(profile);
 
         DailySummary summary = new DailySummary();
-        summary.setRecordDate(LocalDate.parse(seed.todaySummary().date()));
+        LocalDate today = LocalDate.now(APP_ZONE);
+        summary.setRecordDate(today);
         summary.setCalories(seed.todaySummary().calories());
         summary.setCalorieTarget(seed.todaySummary().calorieTarget());
         summary.setWater(seed.todaySummary().water());
@@ -89,7 +94,7 @@ public class DataInitializer implements CommandLineRunner {
 
         for (SeedData.TrendSeed trend : seed.trends()) {
             TrendRecord record = new TrendRecord();
-            record.setRecordDate(LocalDate.parse("2026-" + trend.date()));
+            record.setRecordDate(today.minusDays(seed.trends().size() - 1L - seed.trends().indexOf(trend)));
             record.setWeight(trend.weight());
             record.setSleepHours(trend.sleepHours());
             record.setSteps(trend.steps());
@@ -122,5 +127,22 @@ public class DataInitializer implements CommandLineRunner {
             plan.setCompleted(workout.completed());
             workoutPlanRepository.save(plan);
         }
+    }
+
+    private void migrateExistingDemoData() {
+        userProfileRepository.findAll().forEach(profile -> {
+            if ("小明老师".equals(profile.getName())) {
+                profile.setName("思明老师");
+                userProfileRepository.save(profile);
+            }
+        });
+
+        LocalDate today = LocalDate.now(APP_ZONE);
+        dailySummaryRepository.findFirstByOrderByRecordDateDesc().ifPresent(summary -> {
+            if (summary.getRecordDate().isBefore(today)) {
+                summary.setRecordDate(today);
+                dailySummaryRepository.save(summary);
+            }
+        });
     }
 }

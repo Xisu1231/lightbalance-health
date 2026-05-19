@@ -389,7 +389,8 @@ button:disabled {
 .prompt-button,
 .primary-button,
 .secondary-button,
-.ghost-button {
+.ghost-button,
+.danger-button {
   border: none;
   border-radius: 8px;
   padding: 10px 14px;
@@ -400,7 +401,8 @@ button:disabled {
 
 .primary-button,
 .secondary-button,
-.ghost-button {
+.ghost-button,
+.danger-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -414,6 +416,12 @@ button:disabled {
 .ghost-button {
   background: rgba(36, 51, 47, 0.08);
   color: #31433d;
+}
+
+.danger-button {
+  background: rgba(156, 71, 56, 0.1);
+  color: #8a3f32;
+  border: 1px solid rgba(156, 71, 56, 0.18);
 }
 
 .meal-card button:disabled {
@@ -496,6 +504,13 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
 }
 
 .summary-chip--large {
@@ -660,6 +675,26 @@ button:disabled {
 
 .trend-item {
   gap: 4px;
+}
+
+.ai-advice-box {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 14px;
+  min-height: 136px;
+}
+
+.ai-advice-box p {
+  margin: 0;
+  color: #30443d;
+}
+
+.ai-advice-box small {
+  display: block;
+  margin-top: 12px;
+  color: #65736d;
 }
 
 .loading-state {
@@ -853,6 +888,10 @@ button:disabled {
   .mini-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-actions {
+    grid-template-columns: 1fr;
   }
 
   .prompt-row {

@@ -3,6 +3,7 @@ package com.lightbalance.health.web;
 import com.lightbalance.health.dto.AppDtos;
 import com.lightbalance.health.service.DashboardService;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +31,11 @@ public class DashboardController {
         return dashboardService.consumeMeal(mealId);
     }
 
+    @DeleteMapping("/meals/{mealId}")
+    public AppDtos.DashboardResponse deleteMeal(@PathVariable Long mealId) {
+        return dashboardService.deleteMeal(mealId);
+    }
+
     @PostMapping("/water")
     public AppDtos.DashboardResponse addWater(@Valid @RequestBody AppDtos.WaterRequest request) {
         return dashboardService.addWater(request.amount());
@@ -53,6 +59,11 @@ public class DashboardController {
     @PostMapping("/workouts/{workoutId}/toggle")
     public AppDtos.DashboardResponse toggleWorkout(@PathVariable Long workoutId) {
         return dashboardService.toggleWorkout(workoutId);
+    }
+
+    @DeleteMapping("/workouts/{workoutId}")
+    public AppDtos.DashboardResponse deleteWorkout(@PathVariable Long workoutId) {
+        return dashboardService.deleteWorkout(workoutId);
     }
 
     @PostMapping("/workouts")

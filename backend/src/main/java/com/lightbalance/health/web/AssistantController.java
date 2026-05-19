@@ -27,4 +27,9 @@ public class AssistantController {
     public AppDtos.AssistantResponse sendMessage(@RequestBody AppDtos.AssistantRequest request) {
         return assistantService.reply(request.message());
     }
+
+    @PostMapping("/trend-advice")
+    public AppDtos.TrendAdviceResponse trendAdvice() {
+        return assistantService.trendAdvice();
+    }
 }
