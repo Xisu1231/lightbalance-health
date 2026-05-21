@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 
 @Entity
 public class DailySummary {
@@ -13,6 +15,10 @@ public class DailySummary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private UserProfile owner;
 
     private LocalDate recordDate;
     private int calories;
@@ -40,6 +46,14 @@ public class DailySummary {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UserProfile getOwner() {
+        return owner;
+    }
+
+    public void setOwner(UserProfile owner) {
+        this.owner = owner;
     }
 
     public LocalDate getRecordDate() {

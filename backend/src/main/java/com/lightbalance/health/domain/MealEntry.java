@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class MealEntry {
@@ -13,6 +15,10 @@ public class MealEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private UserProfile owner;
 
     private String name;
     private String mealType;
@@ -30,6 +36,14 @@ public class MealEntry {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UserProfile getOwner() {
+        return owner;
+    }
+
+    public void setOwner(UserProfile owner) {
+        this.owner = owner;
     }
 
     public String getName() {

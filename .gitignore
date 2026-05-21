@@ -6,3 +6,5 @@ tools/
 *.log
 data/health_balance.mv.db
 data/health_balance.trace.db
+backend/data/health_balance.mv.db
+backend/data/health_balance.trace.db

@@ -257,4 +257,81 @@ public final class AppDtos {
         String generatedAt
     ) {
     }
+
+    public record AuthRequest(
+        String username,
+        String password
+    ) {
+    }
+
+    public record RegisterRequest(
+        String username,
+        String password,
+        String name
+    ) {
+    }
+
+    public record AuthUser(
+        Long id,
+        String username,
+        String name,
+        String handle,
+        String goal,
+        boolean admin
+    ) {
+    }
+
+    public record AuthResponse(
+        String token,
+        AuthUser user
+    ) {
+    }
+
+    public record ChangePasswordRequest(
+        String currentPassword,
+        String newPassword
+    ) {
+    }
+
+    public record RecoverPasswordRequest(
+        String username,
+        String name,
+        String newPassword
+    ) {
+    }
+
+    public record AdminUserRow(
+        Long id,
+        String username,
+        String name,
+        String handle,
+        String goal,
+        int healthScore,
+        String riskLevel,
+        String createdAt,
+        String latestRecordDate,
+        int mealCount,
+        int workoutCount,
+        int trendCount,
+        boolean admin
+    ) {
+    }
+
+    public record AdminSummary(
+        int totalUsers,
+        int adminUsers,
+        int activeTodayUsers
+    ) {
+    }
+
+    public record AdminUsersResponse(
+        AdminSummary summary,
+        List<AdminUserRow> users
+    ) {
+    }
+
+    public record AdminResetPasswordRequest(
+        String newPassword
+    ) {
+    }
 }

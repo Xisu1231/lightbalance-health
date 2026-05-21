@@ -1,10 +1,29 @@
 const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
+const TOKEN_KEY = 'lightbalance_token';
+
+function getToken() {
+  return window.localStorage.getItem(TOKEN_KEY) || '';
+}
+
+function setToken(token) {
+  if (token) {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    window.localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+function clearToken() {
+  window.localStorage.removeItem(TOKEN_KEY);
+}
 
 async function request(path, options = {}) {
   const target = API_BASE ? `${API_BASE}${path}` : path;
+  const token = getToken();
   const response = await fetch(target, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     ...options,
@@ -26,7 +45,14 @@ async function request(path, options = {}) {
     } catch {
       // ignore parse errors and fall back to status-based message
     }
-    throw new Error(detail);
+
+    const error = new Error(detail);
+    error.status = response.status;
+    throw error;
+  }
+
+  if (response.status === 204) {
+    return null;
   }
 
   return response.json();
@@ -44,5 +70,8 @@ export function useApi() {
       request(path, {
         method: 'DELETE',
       }),
+    getToken,
+    setToken,
+    clearToken,
   };
 }

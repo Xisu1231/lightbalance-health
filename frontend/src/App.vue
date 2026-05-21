@@ -1,10 +1,96 @@
 <template>
-  <div class="app-shell">
+  <div v-if="!authReady" class="loading-state">正在检查登录状态...</div>
+
+  <div v-else-if="!authUser" class="auth-shell">
+    <section class="auth-hero">
+      <div class="auth-brand">
+        <span class="brand-kicker">LIGHTBALANCE</span>
+        <h1>轻享健康</h1>
+        <p>把健康分析、趋势追踪、账号安全和 DeepSeek 智能建议放进一个真正可持续使用的个人健康工作台。</p>
+      </div>
+
+      <div class="auth-points">
+        <article>
+          <strong>多账号隔离</strong>
+          <span>每位用户都有独立的身体画像、饮食、训练、趋势和 AI 对话记录。</span>
+        </article>
+        <article>
+          <strong>管理员后台</strong>
+          <span>管理员可查看用户列表、账号状态，并为演示场景重置用户密码。</span>
+        </article>
+        <article>
+          <strong>账号安全</strong>
+          <span>支持注册、登录、找回密码和登录后修改密码，软件更像真实产品。</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-tabs auth-tabs--triple">
+        <button :class="{ active: authMode === 'login' }" @click="authMode = 'login'">登录</button>
+        <button :class="{ active: authMode === 'register' }" @click="authMode = 'register'">注册</button>
+        <button :class="{ active: authMode === 'recover' }" @click="authMode = 'recover'">找回密码</button>
+      </div>
+
+      <div v-if="notice.text" class="notice-banner" :class="`notice-banner--${notice.type}`">
+        <span>{{ notice.text }}</span>
+        <button class="ghost-button" @click="clearNotice">知道了</button>
+      </div>
+
+      <form class="auth-form" @submit.prevent="submitAuth">
+        <label class="form-field">
+          <span>账号</span>
+          <input v-model.trim="authForm.username" type="text" placeholder="4-24 位，小写字母 / 数字 / 下划线" />
+        </label>
+
+        <label class="form-field" v-if="authMode !== 'login'">
+          <span>{{ authMode === 'register' ? '显示名称' : '显示名称校验' }}</span>
+          <input
+            v-model.trim="authForm.name"
+            type="text"
+            :placeholder="authMode === 'register' ? '例如：思明老师' : '请输入该账号当前显示名称'"
+          />
+        </label>
+
+        <label class="form-field">
+          <span>{{ authMode === 'recover' ? '新密码' : '密码' }}</span>
+          <input
+            v-model="authForm.password"
+            type="password"
+            :placeholder="authMode === 'recover' ? '设置新的登录密码' : '至少 6 位'"
+          />
+        </label>
+
+        <button class="primary-button auth-submit" type="submit" :disabled="authBusy">
+          <component :is="authMode === 'login' ? ShieldCheck : authMode === 'register' ? UserPlus : RefreshCcw" :size="16" />
+          <span>
+            {{
+              authBusy
+                ? '提交中...'
+                : authMode === 'login'
+                  ? '登录并进入工作台'
+                  : authMode === 'register'
+                    ? '注册并创建健康档案'
+                    : '校验并重置密码'
+            }}
+          </span>
+        </button>
+      </form>
+
+      <div class="auth-hint">
+        <strong>演示账号</strong>
+        <span>账号：admin</span>
+        <span>密码：admin123</span>
+      </div>
+    </section>
+  </div>
+
+  <div v-else class="app-shell">
     <aside class="sidebar">
       <div class="brand-block">
         <span class="brand-kicker">LIGHTBALANCE</span>
         <h1>轻享健康</h1>
-        <p>面向课程大作业的健康生活分析与智能建议平台</p>
+        <p>健康生活分析与智能建议平台</p>
       </div>
 
       <nav class="nav-list">
@@ -29,18 +115,20 @@
         <div>
           <p class="kicker">Healthy Lifestyle Analysis</p>
           <h2>{{ dashboard.recoverySignal.headline }}</h2>
-          <p class="subcopy">
-            把身体画像、饮食、训练、趋势和 DeepSeek 智能建议放进同一张工作台里，方便你边记录边调整。
-          </p>
+          <p class="subcopy">把健康记录、趋势分析、账号安全和管理员能力放进同一个工作台里，既适合演示，也更接近真实软件。</p>
         </div>
 
         <div class="profile-chip">
           <div class="avatar">{{ dashboard.profile.name.slice(0, 1) }}</div>
           <div>
             <strong>{{ dashboard.profile.name }}</strong>
-            <span>{{ dashboard.profile.handle }}</span>
+            <span>{{ authUser.username }}</span>
           </div>
-          <span class="sync-badge">{{ dashboard.recoverySignal.badge }}</span>
+          <span class="sync-badge">{{ authUser.admin ? '管理员' : dashboard.recoverySignal.badge }}</span>
+          <button class="ghost-button profile-logout" @click="logout">
+            <LogOut :size="15" />
+            <span>退出</span>
+          </button>
         </div>
       </header>
 
@@ -51,7 +139,7 @@
 
       <section v-show="currentSection === 'overview'" class="band">
         <div class="hero-grid">
-          <section class="hero-main panel">
+          <section class="panel">
             <div class="panel-head">
               <div>
                 <p class="kicker">Live Overview</p>
@@ -69,13 +157,11 @@
                 <strong>{{ dashboard.summary.calories }} kcal</strong>
                 <small>目标 {{ dashboard.summary.calorieTarget }} kcal</small>
               </article>
-
               <article class="stat-tile">
                 <span>热量余量</span>
                 <strong>{{ calorieBalanceText }}</strong>
                 <small>{{ calorieBalanceHint }}</small>
               </article>
-
               <article class="stat-tile">
                 <span>饮水进度</span>
                 <strong>{{ dashboard.summary.water }} / {{ dashboard.summary.waterTarget }} ml</strong>
@@ -84,7 +170,6 @@
                   <button @click="addWater(500)" :disabled="busy.water">+500 ml</button>
                 </div>
               </article>
-
               <article class="stat-tile stat-tile--dark">
                 <span>恢复面板</span>
                 <strong>{{ dashboard.summary.sleepHours }} h / 睡眠分 {{ dashboard.summary.sleepScore }}</strong>
@@ -118,7 +203,6 @@
               <div>
                 <p class="kicker">Daily Check-in</p>
                 <h3>今日数据回填</h3>
-                <p class="section-note">这一区会直接覆盖今天的睡眠、目标、步数、心情和压力数据。</p>
               </div>
             </div>
 
@@ -146,7 +230,7 @@
                 <input v-model.number="checkinForm.calorieTarget" type="number" min="1200" step="50" />
               </label>
               <label class="form-field">
-                <span>饮水目标 (ml)</span>
+                <span>饮水目标</span>
                 <input v-model.number="checkinForm.waterTarget" type="number" min="500" step="100" />
               </label>
               <label class="form-field">
@@ -154,7 +238,7 @@
                 <input v-model.number="checkinForm.stepTarget" type="number" min="1000" step="500" />
               </label>
               <label class="form-field">
-                <span>训练目标 (min)</span>
+                <span>训练目标</span>
                 <input v-model.number="checkinForm.workoutTarget" type="number" min="0" step="5" />
               </label>
 
@@ -245,13 +329,12 @@
               <div>
                 <p class="kicker">Profile Editor</p>
                 <h3>目标与身体参数</h3>
-                <p class="section-note">保存后会同步更新 BMI、风险等级和趋势图中的最新体重。</p>
               </div>
             </div>
 
             <form class="editor-grid" @submit.prevent="saveProfile">
               <label class="form-field">
-                <span>昵称</span>
+                <span>显示名称</span>
                 <input v-model="profileForm.name" type="text" />
               </label>
               <label class="form-field">
@@ -265,15 +348,15 @@
                 </select>
               </label>
               <label class="form-field">
-                <span>当前体重 (kg)</span>
+                <span>当前体重</span>
                 <input v-model.number="profileForm.weight" type="number" min="30" max="180" step="0.1" />
               </label>
               <label class="form-field">
-                <span>目标体重 (kg)</span>
+                <span>目标体重</span>
                 <input v-model.number="profileForm.targetWeight" type="number" min="30" max="180" step="0.1" />
               </label>
               <label class="form-field">
-                <span>体脂率 (%)</span>
+                <span>体脂率</span>
                 <input v-model.number="profileForm.bodyFat" type="number" min="5" max="60" step="0.1" />
               </label>
               <label class="form-field">
@@ -281,7 +364,7 @@
                 <input v-model.number="profileForm.visceralFat" type="number" min="1" max="25" step="0.1" />
               </label>
               <label class="form-field">
-                <span>肌肉率 (%)</span>
+                <span>肌肉率</span>
                 <input v-model.number="profileForm.muscleRate" type="number" min="10" max="70" step="0.1" />
               </label>
 
@@ -310,7 +393,7 @@
             <div class="panel-head">
               <div>
                 <p class="kicker">Dataset Summary</p>
-                <h3>建模样本说明</h3>
+                <h3>建模样本摘要</h3>
               </div>
             </div>
 
@@ -346,7 +429,7 @@
             <div class="panel-head">
               <div>
                 <p class="kicker">Quick Add</p>
-                <h3>常用餐食快捷录入</h3>
+                <h3>餐食记录</h3>
               </div>
             </div>
 
@@ -374,15 +457,14 @@
             <div class="panel-head">
               <div>
                 <p class="kicker">Custom Meal</p>
-                <h3>手动新增一餐</h3>
-                <p class="section-note">适合把自己吃过的食物、加餐或饮品快速记进系统。</p>
+                <h3>自定义餐食</h3>
               </div>
             </div>
 
             <form class="editor-grid" @submit.prevent="saveMeal">
               <label class="form-field form-field--wide">
                 <span>餐食名称</span>
-                <input v-model="mealForm.name" type="text" placeholder="例如：鸡蛋三明治" />
+                <input v-model="mealForm.name" type="text" />
               </label>
               <label class="form-field">
                 <span>类别</span>
@@ -392,22 +474,22 @@
               </label>
               <label class="form-field">
                 <span>份量</span>
-                <input v-model="mealForm.portion" type="text" placeholder="1 份 / 250 ml" />
+                <input v-model="mealForm.portion" type="text" />
               </label>
               <label class="form-field">
                 <span>热量</span>
                 <input v-model.number="mealForm.calories" type="number" min="0" step="10" />
               </label>
               <label class="form-field">
-                <span>蛋白质 (g)</span>
+                <span>蛋白质</span>
                 <input v-model.number="mealForm.protein" type="number" min="0" step="1" />
               </label>
               <label class="form-field">
-                <span>碳水 (g)</span>
+                <span>碳水</span>
                 <input v-model.number="mealForm.carbs" type="number" min="0" step="1" />
               </label>
               <label class="form-field">
-                <span>脂肪 (g)</span>
+                <span>脂肪</span>
                 <input v-model.number="mealForm.fat" type="number" min="0" step="1" />
               </label>
               <label class="form-field">
@@ -416,7 +498,7 @@
               </label>
               <label class="form-check form-check--wide">
                 <input v-model="mealForm.eaten" type="checkbox" />
-                <span>同时记入今天的实际摄入</span>
+                <span>同时记入今日摄入</span>
               </label>
 
               <div class="form-actions form-actions--full">
@@ -436,7 +518,7 @@
             <div class="panel-head">
               <div>
                 <p class="kicker">Training Flow</p>
-                <h3>今日训练计划</h3>
+                <h3>训练计划</h3>
               </div>
             </div>
 
@@ -446,10 +528,10 @@
                   <strong>{{ plan.title }}</strong>
                   <span>{{ plan.category }} · {{ plan.intensity }}</span>
                 </div>
-                <small>{{ plan.duration }} min · 约 {{ plan.caloriesBurned }} kcal</small>
+                <small>{{ plan.duration }} min · {{ plan.caloriesBurned }} kcal</small>
                 <div class="card-actions">
                   <button :class="{ done: plan.completed }" @click="toggleWorkout(plan.id)" :disabled="busy.workoutToggle">
-                    {{ plan.completed ? '已完成，点此撤销' : '标记完成' }}
+                    {{ plan.completed ? '已完成，点击撤销' : '标记完成' }}
                   </button>
                   <button class="danger-button" :disabled="busy.workoutDelete" @click="deleteWorkout(plan.id)">
                     <Trash2 :size="15" />
@@ -463,19 +545,19 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Plan Builder</p>
-                <h3>自定义训练任务</h3>
+                <p class="kicker">Custom Workout</p>
+                <h3>自定义训练</h3>
               </div>
             </div>
 
             <form class="editor-grid" @submit.prevent="saveWorkout">
               <label class="form-field form-field--wide">
                 <span>训练标题</span>
-                <input v-model="workoutForm.title" type="text" placeholder="例如：晚间快走 + 拉伸" />
+                <input v-model="workoutForm.title" type="text" />
               </label>
               <label class="form-field">
                 <span>类别</span>
-                <input v-model="workoutForm.category" type="text" placeholder="有氧 / 力量 / 核心" />
+                <input v-model="workoutForm.category" type="text" />
               </label>
               <label class="form-field">
                 <span>强度</span>
@@ -484,36 +566,21 @@
                 </select>
               </label>
               <label class="form-field">
-                <span>时长 (min)</span>
+                <span>时长</span>
                 <input v-model.number="workoutForm.duration" type="number" min="5" step="5" />
               </label>
               <label class="form-field">
-                <span>预计消耗 (kcal)</span>
+                <span>预计消耗</span>
                 <input v-model.number="workoutForm.caloriesBurned" type="number" min="0" step="10" />
               </label>
 
               <div class="form-actions form-actions--full">
                 <button class="primary-button" type="submit" :disabled="busy.workout">
                   <Dumbbell :size="16" />
-                  <span>{{ busy.workout ? '创建中...' : '新增训练计划' }}</span>
+                  <span>{{ busy.workout ? '保存中...' : '新增训练任务' }}</span>
                 </button>
               </div>
             </form>
-
-            <div class="summary-strip">
-              <article class="summary-chip summary-chip--large">
-                <span>训练时长</span>
-                <strong>{{ dashboard.summary.workoutMinutes }} / {{ dashboard.summary.workoutTarget }} min</strong>
-              </article>
-              <article class="summary-chip summary-chip--large">
-                <span>今日步数</span>
-                <strong>{{ dashboard.summary.steps }} / {{ dashboard.summary.stepTarget }}</strong>
-              </article>
-              <article class="summary-chip summary-chip--large">
-                <span>心情分</span>
-                <strong>{{ dashboard.summary.moodScore }} / 100</strong>
-              </article>
-            </div>
           </section>
         </div>
       </section>
@@ -523,19 +590,8 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Trend Dashboard</p>
-                <h3>体重、睡眠与压力联动</h3>
-              </div>
-            </div>
-            <BaseChart :option="trendOption" />
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="kicker">Manual Trend Entry</p>
-                <h3>手动补录趋势</h3>
-                <p class="section-note">适合补填前几天的体重或睡眠数据，也会影响最新画像。</p>
+                <p class="kicker">Trend Tracker</p>
+                <h3>趋势追踪</h3>
               </div>
             </div>
 
@@ -545,11 +601,11 @@
                 <input v-model="trendForm.recordDate" type="date" />
               </label>
               <label class="form-field">
-                <span>体重 (kg)</span>
-                <input v-model.number="trendForm.weight" type="number" min="30" max="180" step="0.1" />
+                <span>体重</span>
+                <input v-model.number="trendForm.weight" type="number" min="30" step="0.1" />
               </label>
               <label class="form-field">
-                <span>睡眠 (h)</span>
+                <span>睡眠</span>
                 <input v-model.number="trendForm.sleepHours" type="number" min="0" max="12" step="0.1" />
               </label>
               <label class="form-field">
@@ -588,12 +644,11 @@
               <div>
                 <p class="kicker">DeepSeek Trend Coach</p>
                 <h3>趋势智能建议</h3>
-                <p class="section-note">点击后会把最近趋势交给 DeepSeek，生成一段适合当前状态的行动建议。</p>
               </div>
             </div>
 
             <div class="ai-advice-box">
-              <p>{{ trendAdvice.advice || '还没有生成趋势建议。你可以先补录今天的数据，再让 DeepSeek 判断接下来怎么调整。' }}</p>
+              <p>{{ trendAdvice.advice || '还没有生成趋势建议。你可以先补录今天的数据，再让 DeepSeek 分析接下来怎么调整。' }}</p>
               <small v-if="trendAdvice.generatedAt">
                 {{ trendAdvice.runtime.provider }} · {{ trendAdvice.runtime.model }} · {{ trendAdvice.generatedAt }}
               </small>
@@ -640,7 +695,7 @@
             <div class="panel-head">
               <div>
                 <p class="kicker">BMI Risk Bands</p>
-                <h3>体型区间风险率</h3>
+                <h3>BMI 风险区间</h3>
               </div>
             </div>
             <BaseChart :option="bmiBandOption" />
@@ -691,7 +746,7 @@
               <textarea
                 v-model="draftMessage"
                 rows="3"
-                placeholder="告诉我今天的饮食、训练、睡眠、情绪变化，或者直接问 DeepSeek 你下一步该怎么调整。"
+                placeholder="告诉我今天的饮食、训练、睡眠和情绪变化，或者直接问 DeepSeek 下一步怎么调。"
               />
               <button class="primary-button" @click="sendMessage" :disabled="sending || !draftMessage.trim()">
                 <Sparkles :size="16" />
@@ -700,6 +755,158 @@
             </div>
           </section>
         </div>
+      </section>
+
+      <section v-show="currentSection === 'account'" class="band">
+        <div class="section-grid section-grid--wide">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">Account Security</p>
+                <h3>修改密码</h3>
+                <p class="section-note">修改后会刷新登录令牌，当前设备会自动保持登录。</p>
+              </div>
+            </div>
+
+            <form class="editor-grid" @submit.prevent="changePassword">
+              <label class="form-field form-field--wide">
+                <span>当前密码</span>
+                <input v-model="securityForm.currentPassword" type="password" />
+              </label>
+              <label class="form-field form-field--wide">
+                <span>新密码</span>
+                <input v-model="securityForm.newPassword" type="password" />
+              </label>
+              <div class="form-actions form-actions--full">
+                <button class="primary-button" type="submit" :disabled="busy.security">
+                  <KeyRound :size="16" />
+                  <span>{{ busy.security ? '提交中...' : '更新登录密码' }}</span>
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">Account Snapshot</p>
+                <h3>当前账号信息</h3>
+              </div>
+            </div>
+
+            <div class="dataset-grid">
+              <article class="summary-chip">
+                <span>用户名</span>
+                <strong>{{ authUser.username }}</strong>
+              </article>
+              <article class="summary-chip">
+                <span>显示名称</span>
+                <strong>{{ dashboard.profile.name }}</strong>
+              </article>
+              <article class="summary-chip">
+                <span>角色</span>
+                <strong>{{ authUser.admin ? '管理员' : '普通用户' }}</strong>
+              </article>
+              <article class="summary-chip">
+                <span>当前目标</span>
+                <strong>{{ dashboard.profile.goal }}</strong>
+              </article>
+            </div>
+
+            <div class="ai-advice-box">
+              <p>找回密码入口已经放在登录页。如果用户忘记密码，可以用“账号 + 当前显示名称 + 新密码”完成重置。</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section v-if="authUser.admin" v-show="currentSection === 'admin'" class="band">
+        <div class="section-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">Admin Summary</p>
+                <h3>管理员后台</h3>
+              </div>
+              <button class="secondary-button" @click="loadAdminUsers" :disabled="busy.adminLoad">
+                <RefreshCcw :size="16" />
+                <span>{{ busy.adminLoad ? '刷新中...' : '刷新用户列表' }}</span>
+              </button>
+            </div>
+
+            <div class="dataset-grid" v-if="adminUsers">
+              <article class="summary-chip">
+                <span>总用户数</span>
+                <strong>{{ adminUsers.summary.totalUsers }}</strong>
+              </article>
+              <article class="summary-chip">
+                <span>管理员</span>
+                <strong>{{ adminUsers.summary.adminUsers }}</strong>
+              </article>
+              <article class="summary-chip">
+                <span>今日活跃</span>
+                <strong>{{ adminUsers.summary.activeTodayUsers }}</strong>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">User List</p>
+              <h3>用户列表</h3>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap" v-if="adminUsers">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>账号</th>
+                  <th>名称</th>
+                  <th>角色</th>
+                  <th>目标</th>
+                  <th>评分</th>
+                  <th>风险</th>
+                  <th>创建时间</th>
+                  <th>最近记录</th>
+                  <th>餐食</th>
+                  <th>训练</th>
+                  <th>趋势</th>
+                  <th>重置密码</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in adminUsers.users" :key="user.id">
+                  <td>{{ user.username }}</td>
+                  <td>{{ user.name }}</td>
+                  <td>{{ user.admin ? '管理员' : '用户' }}</td>
+                  <td>{{ user.goal }}</td>
+                  <td>{{ user.healthScore }}</td>
+                  <td>{{ user.riskLevel }}</td>
+                  <td>{{ user.createdAt }}</td>
+                  <td>{{ user.latestRecordDate }}</td>
+                  <td>{{ user.mealCount }}</td>
+                  <td>{{ user.workoutCount }}</td>
+                  <td>{{ user.trendCount }}</td>
+                  <td>
+                    <div class="admin-reset">
+                      <input v-model="adminResetDrafts[user.id]" type="password" placeholder="新密码" />
+                      <button
+                        class="ghost-button"
+                        :disabled="busy.adminReset"
+                        @click="resetUserPassword(user.id)"
+                      >
+                        重置
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </main>
 
@@ -716,11 +923,17 @@ import {
   Droplets,
   Dumbbell,
   HeartPulse,
+  KeyRound,
   LayoutDashboard,
+  LogOut,
+  RefreshCcw,
   Save,
+  ShieldCheck,
   Sparkles,
   Target,
   Trash2,
+  UserPlus,
+  Users,
 } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
 import BaseChart from './components/BaseChart.vue';
@@ -729,23 +942,31 @@ import { useApi } from './composables/useApi';
 
 const api = useApi();
 
-const navItems = [
-  { key: 'overview', label: '今日概览', desc: '先看恢复、目标和今天的节奏', icon: LayoutDashboard },
+const baseNavItems = [
+  { key: 'overview', label: '今日概览', desc: '查看恢复、目标和今天的节奏', icon: LayoutDashboard },
   { key: 'body', label: '身体画像', desc: '维护体重、体脂和目标参数', icon: HeartPulse },
   { key: 'nutrition', label: '饮食规划', desc: '记录餐食、营养和饮水', icon: Apple },
-  { key: 'workout', label: '训练计划', desc: '安排任务并追踪完成情况', icon: Activity },
+  { key: 'workout', label: '训练计划', desc: '安排训练任务并追踪完成情况', icon: Activity },
   { key: 'trend', label: '趋势追踪', desc: '补录每日趋势并查看模型表现', icon: ChartColumnBig },
   { key: 'assistant', label: '智能建议', desc: '把数据交给 DeepSeek 帮你判断', icon: BrainCircuit },
+  { key: 'account', label: '账号安全', desc: '修改密码并管理当前账号', icon: KeyRound },
 ];
+
+const adminNavItem = { key: 'admin', label: '管理员后台', desc: '查看用户列表并重置密码', icon: Users };
 
 const goalTemplates = ['减脂塑形', '稳定体重与作息', '提升睡眠质量', '增强体能与恢复'];
 const mealTypes = ['早餐', '午餐', '晚餐', '加餐', '饮品'];
 const workoutIntensities = ['轻松', '中等', '偏高', '高强度'];
 
 const currentSection = ref('overview');
+const authReady = ref(false);
+const authUser = ref(null);
+const authMode = ref('login');
+const authBusy = ref(false);
 const dashboard = ref(null);
 const analytics = ref(null);
 const assistant = ref(null);
+const adminUsers = ref(null);
 const draftMessage = ref('');
 const sending = ref(false);
 const customWaterAmount = ref(300);
@@ -754,6 +975,19 @@ const notice = reactive({
   type: 'success',
   text: '',
 });
+
+const authForm = reactive({
+  username: '',
+  password: '',
+  name: '',
+});
+
+const securityForm = reactive({
+  currentPassword: '',
+  newPassword: '',
+});
+
+const adminResetDrafts = reactive({});
 
 const busy = reactive({
   profile: false,
@@ -767,6 +1001,9 @@ const busy = reactive({
   trend: false,
   trendAdvice: false,
   water: false,
+  security: false,
+  adminLoad: false,
+  adminReset: false,
 });
 
 const trendAdvice = reactive({
@@ -802,7 +1039,6 @@ const checkinForm = reactive({
 });
 
 const mealForm = reactive(createMealDefaults());
-
 const workoutForm = reactive(createWorkoutDefaults());
 
 const trendForm = reactive({
@@ -814,31 +1050,25 @@ const trendForm = reactive({
   stressScore: 0,
 });
 
+const isAdmin = computed(() => Boolean(authUser.value?.admin));
+
+const navItems = computed(() => (isAdmin.value ? [...baseNavItems, adminNavItem] : baseNavItems));
+
 const calorieBalance = computed(() => {
-  if (!dashboard.value) {
-    return 0;
-  }
+  if (!dashboard.value) return 0;
   return dashboard.value.summary.calorieTarget - dashboard.value.summary.calories;
 });
 
 const calorieBalanceText = computed(() => {
-  if (calorieBalance.value > 0) {
-    return `剩余 ${calorieBalance.value} kcal`;
-  }
-  if (calorieBalance.value < 0) {
-    return `超出 ${Math.abs(calorieBalance.value)} kcal`;
-  }
+  if (calorieBalance.value > 0) return `剩余 ${calorieBalance.value} kcal`;
+  if (calorieBalance.value < 0) return `超出 ${Math.abs(calorieBalance.value)} kcal`;
   return '刚好达标';
 });
 
 const calorieBalanceHint = computed(() => {
-  if (calorieBalance.value > 250) {
-    return '还能安排一顿轻食或恢复加餐';
-  }
-  if (calorieBalance.value >= 0) {
-    return '今天的总量已经很接近目标';
-  }
-  return '晚间建议以补水和轻活动为主';
+  if (calorieBalance.value > 250) return '还可以安排一顿轻食或恢复加餐';
+  if (calorieBalance.value >= 0) return '今天的总量已经很接近目标';
+  return '晚上建议以补水和轻活动为主';
 });
 
 const latestTrends = computed(() => (dashboard.value?.trends || []).slice(-5).reverse());
@@ -846,10 +1076,7 @@ const latestTrends = computed(() => (dashboard.value?.trends || []).slice(-5).re
 const trendOption = computed(() => ({
   backgroundColor: 'transparent',
   tooltip: { trigger: 'axis' },
-  legend: {
-    textStyle: { color: '#52615a' },
-    top: 0,
-  },
+  legend: { textStyle: { color: '#52615a' }, top: 0 },
   grid: { left: 24, right: 18, top: 48, bottom: 24, containLabel: true },
   xAxis: {
     type: 'category',
@@ -958,10 +1185,7 @@ const bmiBandOption = computed(() => ({
       type: 'bar',
       data: analytics.value?.bmiBands.map((item) => item.highRiskRate) || [],
       barWidth: 24,
-      itemStyle: {
-        color: '#27465a',
-        borderRadius: [6, 6, 0, 0],
-      },
+      itemStyle: { color: '#27465a', borderRadius: [6, 6, 0, 0] },
     },
   ],
 }));
@@ -1012,9 +1236,7 @@ function resetWorkoutForm() {
 }
 
 function syncFormsFromDashboard() {
-  if (!dashboard.value) {
-    return;
-  }
+  if (!dashboard.value) return;
 
   Object.assign(profileForm, {
     name: dashboard.value.profile.name,
@@ -1059,8 +1281,33 @@ async function loadAll() {
     analytics.value = analyticsData;
     assistant.value = assistantData;
     syncFormsFromDashboard();
+
+    if (isAdmin.value) {
+      await loadAdminUsers();
+    } else {
+      adminUsers.value = null;
+    }
   } catch (error) {
+    if (error.status === 401) {
+      api.clearToken();
+      authUser.value = null;
+      authReady.value = true;
+      showNotice('登录状态已失效，请重新登录。', 'error');
+      return;
+    }
     showNotice(error.message || '初始化数据失败，请刷新页面重试。', 'error');
+  }
+}
+
+async function loadAdminUsers() {
+  if (!isAdmin.value) return;
+  busy.adminLoad = true;
+  try {
+    adminUsers.value = await api.get('/api/admin/users');
+  } catch (error) {
+    showNotice(error.message || '用户列表加载失败，请稍后再试。', 'error');
+  } finally {
+    busy.adminLoad = false;
   }
 }
 
@@ -1069,9 +1316,15 @@ async function runDashboardAction(flag, request, successText, afterSuccess) {
   try {
     dashboard.value = await request();
     syncFormsFromDashboard();
-    if (afterSuccess) {
-      afterSuccess();
+    if (dashboard.value?.profile && authUser.value) {
+      authUser.value = {
+        ...authUser.value,
+        name: dashboard.value.profile.name,
+        handle: dashboard.value.profile.handle,
+        goal: dashboard.value.profile.goal,
+      };
     }
+    if (afterSuccess) afterSuccess();
     showNotice(successText, 'success');
   } catch (error) {
     showNotice(error.message || '操作失败，请稍后再试。', 'error');
@@ -1106,26 +1359,18 @@ async function deleteWorkout(id) {
 }
 
 async function saveProfile() {
-  await runDashboardAction(
-    'profile',
-    () => api.post('/api/dashboard/profile', profileForm),
-    '身体画像已更新，评分和风险等级已经重新计算。'
-  );
+  await runDashboardAction('profile', () => api.post('/api/dashboard/profile', profileForm), '身体画像已更新。');
 }
 
 async function saveCheckin() {
-  await runDashboardAction(
-    'checkin',
-    () => api.post('/api/dashboard/checkin', checkinForm),
-    '今日数据已保存。'
-  );
+  await runDashboardAction('checkin', () => api.post('/api/dashboard/checkin', checkinForm), '今日数据已保存。');
 }
 
 async function saveMeal() {
   await runDashboardAction(
     'meal',
     () => api.post('/api/dashboard/meals', mealForm),
-    mealForm.eaten ? '餐食已新增并写入今日摄入。' : '餐食模版已新增。',
+    mealForm.eaten ? '餐食已新增并写入今日摄入。' : '餐食模板已新增。',
     resetMealForm
   );
 }
@@ -1140,11 +1385,7 @@ async function saveWorkout() {
 }
 
 async function saveTrend() {
-  await runDashboardAction(
-    'trend',
-    () => api.post('/api/dashboard/trends', trendForm),
-    '趋势数据已补录。'
-  );
+  await runDashboardAction('trend', () => api.post('/api/dashboard/trends', trendForm), '趋势数据已补录。');
 }
 
 async function generateTrendAdvice() {
@@ -1161,9 +1402,7 @@ async function generateTrendAdvice() {
 }
 
 async function sendMessage() {
-  if (!draftMessage.value.trim()) {
-    return;
-  }
+  if (!draftMessage.value.trim()) return;
   sending.value = true;
   try {
     assistant.value = await api.post('/api/assistant/message', { message: draftMessage.value.trim() });
@@ -1175,5 +1414,116 @@ async function sendMessage() {
   }
 }
 
-onMounted(loadAll);
+async function changePassword() {
+  busy.security = true;
+  try {
+    const response = await api.post('/api/auth/change-password', securityForm);
+    persistAuth(response);
+    securityForm.currentPassword = '';
+    securityForm.newPassword = '';
+    showNotice('密码已修改，新的登录令牌已经生效。', 'success');
+  } catch (error) {
+    showNotice(error.message || '修改密码失败，请稍后再试。', 'error');
+  } finally {
+    busy.security = false;
+  }
+}
+
+async function resetUserPassword(userId) {
+  const newPassword = adminResetDrafts[userId];
+  if (!newPassword || newPassword.trim().length < 6) {
+    showNotice('请先输入至少 6 位的新密码。', 'error');
+    return;
+  }
+  busy.adminReset = true;
+  try {
+    await api.post(`/api/admin/users/${userId}/reset-password`, { newPassword });
+    adminResetDrafts[userId] = '';
+    showNotice('用户密码已由管理员重置。', 'success');
+  } catch (error) {
+    showNotice(error.message || '管理员重置密码失败。', 'error');
+  } finally {
+    busy.adminReset = false;
+  }
+}
+
+function persistAuth(payload) {
+  api.setToken(payload.token);
+  authUser.value = payload.user;
+}
+
+async function submitAuth() {
+  authBusy.value = true;
+  try {
+    if (authMode.value === 'recover') {
+      await api.post('/api/auth/recover-password', {
+        username: authForm.username,
+        name: authForm.name,
+        newPassword: authForm.password,
+      });
+      authMode.value = 'login';
+      authForm.password = '';
+      showNotice('密码已重置，请使用新密码登录。', 'success');
+      return;
+    }
+
+    const path = authMode.value === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const payload = authMode.value === 'login'
+      ? {
+          username: authForm.username,
+          password: authForm.password,
+        }
+      : {
+          username: authForm.username,
+          password: authForm.password,
+          name: authForm.name,
+        };
+    const response = await api.post(path, payload);
+    persistAuth(response);
+    authReady.value = true;
+    await loadAll();
+    showNotice(authMode.value === 'login' ? '登录成功，欢迎回来。' : '注册成功，已为你创建初始健康档案。', 'success');
+  } catch (error) {
+    showNotice(error.message || '登录或注册失败，请稍后重试。', 'error');
+  } finally {
+    authBusy.value = false;
+  }
+}
+
+async function logout() {
+  try {
+    await api.post('/api/auth/logout');
+  } catch {
+    // ignore logout failures
+  } finally {
+    api.clearToken();
+    authUser.value = null;
+    dashboard.value = null;
+    analytics.value = null;
+    assistant.value = null;
+    adminUsers.value = null;
+    authReady.value = true;
+    currentSection.value = 'overview';
+  }
+}
+
+async function bootstrap() {
+  if (!api.getToken()) {
+    authReady.value = true;
+    return;
+  }
+
+  try {
+    const response = await api.get('/api/auth/me');
+    persistAuth(response);
+    await loadAll();
+  } catch {
+    api.clearToken();
+    authUser.value = null;
+  } finally {
+    authReady.value = true;
+  }
+}
+
+onMounted(bootstrap);
 </script>

@@ -17,8 +17,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DashboardService {
@@ -47,12 +49,12 @@ public class DashboardService {
     }
 
     @Transactional(readOnly = true)
-    public AppDtos.DashboardResponse getDashboard() {
-        UserProfile profile = getProfile();
-        DailySummary summary = getLatestSummary();
-        List<TrendRecord> trends = trendRecordRepository.findAllByOrderByRecordDateAsc();
-        List<MealEntry> meals = mealEntryRepository.findAllByOrderByRecommendedTimeAsc();
-        List<WorkoutPlan> workouts = workoutPlanRepository.findAll()
+    public AppDtos.DashboardResponse getDashboard(UserProfile user) {
+        UserProfile profile = getProfile(user);
+        DailySummary summary = getLatestSummary(user);
+        List<TrendRecord> trends = trendRecordRepository.findAllByOwnerOrderByRecordDateAsc(user);
+        List<MealEntry> meals = mealEntryRepository.findAllByOwnerOrderByRecommendedTimeAsc(user);
+        List<WorkoutPlan> workouts = workoutPlanRepository.findAllByOwner(user)
             .stream()
             .sorted(Comparator.comparing(WorkoutPlan::isCompleted))
             .toList();
@@ -88,9 +90,9 @@ public class DashboardService {
                 summary.getStressScore()
             ),
             List.of(
-                macro("蛋白质", summary.getProtein(), summary.getProteinTarget(), "g"),
-                macro("碳水", summary.getCarbs(), summary.getCarbsTarget(), "g"),
-                macro("脂肪", summary.getFat(), summary.getFatTarget(), "g")
+                macro("Protein", summary.getProtein(), summary.getProteinTarget(), "g"),
+                macro("Carbs", summary.getCarbs(), summary.getCarbsTarget(), "g"),
+                macro("Fat", summary.getFat(), summary.getFatTarget(), "g")
             ),
             meals.stream()
                 .map(meal -> new AppDtos.MealCard(
@@ -134,46 +136,49 @@ public class DashboardService {
     }
 
     @Transactional
-    public AppDtos.DashboardResponse consumeMeal(Long mealId) {
-        MealEntry meal = mealEntryRepository.findById(mealId).orElseThrow();
+    public AppDtos.DashboardResponse consumeMeal(UserProfile user, Long mealId) {
+        MealEntry meal = mealEntryRepository.findByIdAndOwner(mealId, user)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal not found"));
         if (!meal.isEaten()) {
             meal.setEaten(true);
             mealEntryRepository.save(meal);
 
-            DailySummary summary = getLatestSummary();
+            DailySummary summary = getLatestSummary(user);
             applyMeal(summary, meal);
             dailySummaryRepository.save(summary);
-            refreshProfileSignals(summary);
+            refreshProfileSignals(user, summary);
         }
-        return getDashboard();
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse deleteMeal(Long mealId) {
-        MealEntry meal = mealEntryRepository.findById(mealId).orElseThrow();
+    public AppDtos.DashboardResponse deleteMeal(UserProfile user, Long mealId) {
+        MealEntry meal = mealEntryRepository.findByIdAndOwner(mealId, user)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal not found"));
         if (meal.isEaten()) {
-            DailySummary summary = getLatestSummary();
+            DailySummary summary = getLatestSummary(user);
             removeMeal(summary, meal);
             dailySummaryRepository.save(summary);
-            refreshProfileSignals(summary);
+            refreshProfileSignals(user, summary);
         }
         mealEntryRepository.delete(meal);
-        return getDashboard();
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse addWater(int amount) {
-        DailySummary summary = getLatestSummary();
+    public AppDtos.DashboardResponse addWater(UserProfile user, int amount) {
+        DailySummary summary = getLatestSummary(user);
         summary.setWater(Math.max(0, summary.getWater() + Math.max(0, amount)));
         dailySummaryRepository.save(summary);
-        refreshProfileSignals(summary);
-        return getDashboard();
+        refreshProfileSignals(user, summary);
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse toggleWorkout(Long workoutId) {
-        WorkoutPlan workout = workoutPlanRepository.findById(workoutId).orElseThrow();
-        DailySummary summary = getLatestSummary();
+    public AppDtos.DashboardResponse toggleWorkout(UserProfile user, Long workoutId) {
+        WorkoutPlan workout = workoutPlanRepository.findByIdAndOwner(workoutId, user)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
+        DailySummary summary = getLatestSummary(user);
         if (workout.isCompleted()) {
             workout.setCompleted(false);
             summary.setWorkoutMinutes(Math.max(0, summary.getWorkoutMinutes() - workout.getDuration()));
@@ -183,27 +188,28 @@ public class DashboardService {
         }
         workoutPlanRepository.save(workout);
         dailySummaryRepository.save(summary);
-        refreshProfileSignals(summary);
-        return getDashboard();
+        refreshProfileSignals(user, summary);
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse deleteWorkout(Long workoutId) {
-        WorkoutPlan workout = workoutPlanRepository.findById(workoutId).orElseThrow();
+    public AppDtos.DashboardResponse deleteWorkout(UserProfile user, Long workoutId) {
+        WorkoutPlan workout = workoutPlanRepository.findByIdAndOwner(workoutId, user)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
         if (workout.isCompleted()) {
-            DailySummary summary = getLatestSummary();
+            DailySummary summary = getLatestSummary(user);
             summary.setWorkoutMinutes(Math.max(0, summary.getWorkoutMinutes() - workout.getDuration()));
             dailySummaryRepository.save(summary);
-            refreshProfileSignals(summary);
+            refreshProfileSignals(user, summary);
         }
         workoutPlanRepository.delete(workout);
-        return getDashboard();
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse updateProfile(AppDtos.ProfileUpdateRequest request) {
-        UserProfile profile = getProfile();
-        DailySummary summary = getLatestSummary();
+    public AppDtos.DashboardResponse updateProfile(UserProfile user, AppDtos.ProfileUpdateRequest request) {
+        UserProfile profile = getProfile(user);
+        DailySummary summary = getLatestSummary(user);
 
         profile.setName(textOrDefault(request.name(), profile.getName()));
         profile.setHandleName(textOrDefault(request.handle(), profile.getHandleName()));
@@ -216,13 +222,13 @@ public class DashboardService {
 
         recalculateProfile(profile, summary);
         userProfileRepository.save(profile);
-        syncTrend(summary, profile);
-        return getDashboard();
+        syncTrend(profile, summary);
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse updateCheckin(AppDtos.DailyCheckinRequest request) {
-        DailySummary summary = getLatestSummary();
+    public AppDtos.DashboardResponse updateCheckin(UserProfile user, AppDtos.DailyCheckinRequest request) {
+        DailySummary summary = getLatestSummary(user);
 
         summary.setCalorieTarget(positiveOrDefault(request.calorieTarget(), summary.getCalorieTarget()));
         summary.setWaterTarget(positiveOrDefault(request.waterTarget(), summary.getWaterTarget()));
@@ -235,16 +241,17 @@ public class DashboardService {
         summary.setSleepScore(calculateSleepScore(summary.getSleepHours(), summary.getStressScore()));
 
         dailySummaryRepository.save(summary);
-        refreshProfileSignals(summary);
-        return getDashboard();
+        refreshProfileSignals(user, summary);
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse createMeal(AppDtos.MealCreateRequest request) {
+    public AppDtos.DashboardResponse createMeal(UserProfile user, AppDtos.MealCreateRequest request) {
         MealEntry meal = new MealEntry();
-        meal.setName(textOrDefault(request.name(), "自定义餐食"));
-        meal.setMealType(textOrDefault(request.mealType(), "加餐"));
-        meal.setPortion(textOrDefault(request.portion(), "1 份"));
+        meal.setOwner(user);
+        meal.setName(textOrDefault(request.name(), "Custom meal"));
+        meal.setMealType(textOrDefault(request.mealType(), "Snack"));
+        meal.setPortion(textOrDefault(request.portion(), "1 serving"));
         meal.setCalories(Math.max(0, request.calories()));
         meal.setProtein(Math.max(0, request.protein()));
         meal.setCarbs(Math.max(0, request.carbs()));
@@ -254,42 +261,44 @@ public class DashboardService {
         mealEntryRepository.save(meal);
 
         if (request.eaten()) {
-            DailySummary summary = getLatestSummary();
+            DailySummary summary = getLatestSummary(user);
             applyMeal(summary, meal);
             dailySummaryRepository.save(summary);
-            refreshProfileSignals(summary);
+            refreshProfileSignals(user, summary);
         }
 
-        return getDashboard();
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse createWorkout(AppDtos.WorkoutCreateRequest request) {
+    public AppDtos.DashboardResponse createWorkout(UserProfile user, AppDtos.WorkoutCreateRequest request) {
         WorkoutPlan workout = new WorkoutPlan();
-        workout.setTitle(textOrDefault(request.title(), "自定义训练"));
-        workout.setCategory(textOrDefault(request.category(), "功能训练"));
+        workout.setOwner(user);
+        workout.setTitle(textOrDefault(request.title(), "Custom workout"));
+        workout.setCategory(textOrDefault(request.category(), "Functional training"));
         workout.setDuration(Math.max(5, request.duration()));
         workout.setCaloriesBurned(Math.max(0, request.caloriesBurned()));
-        workout.setIntensity(textOrDefault(request.intensity(), "中等"));
+        workout.setIntensity(textOrDefault(request.intensity(), "Moderate"));
         workout.setCompleted(false);
         workoutPlanRepository.save(workout);
-        return getDashboard();
+        return getDashboard(user);
     }
 
     @Transactional
-    public AppDtos.DashboardResponse createTrend(AppDtos.TrendCreateRequest request) {
-        LocalDate recordDate = parseDate(request.recordDate());
-        TrendRecord trend = trendRecordRepository.findByRecordDate(recordDate).orElseGet(TrendRecord::new);
+    public AppDtos.DashboardResponse createTrend(UserProfile user, AppDtos.TrendCreateRequest request) {
+        LocalDate recordDate = parseDate(user, request.recordDate());
+        TrendRecord trend = trendRecordRepository.findByOwnerAndRecordDate(user, recordDate).orElseGet(TrendRecord::new);
+        trend.setOwner(user);
         trend.setRecordDate(recordDate);
-        trend.setWeight(positiveOrDefault(request.weight(), getProfile().getWeight()));
-        trend.setSleepHours(positiveOrDefault(request.sleepHours(), getLatestSummary().getSleepHours()));
+        trend.setWeight(positiveOrDefault(request.weight(), getProfile(user).getWeight()));
+        trend.setSleepHours(positiveOrDefault(request.sleepHours(), getLatestSummary(user).getSleepHours()));
         trend.setSteps(Math.max(0, request.steps()));
         trend.setCalories(Math.max(0, request.calories()));
         trend.setStressScore(clamp(Math.max(0, request.stressScore()), 0, 100));
         trendRecordRepository.save(trend);
 
-        UserProfile profile = getProfile();
-        DailySummary summary = getLatestSummary();
+        UserProfile profile = getProfile(user);
+        DailySummary summary = getLatestSummary(user);
         profile.setWeight(trend.getWeight());
         if (summary.getRecordDate().equals(recordDate)) {
             summary.setSleepHours(trend.getSleepHours());
@@ -301,15 +310,17 @@ public class DashboardService {
         }
         recalculateProfile(profile, summary);
         userProfileRepository.save(profile);
-        return getDashboard();
+        return getDashboard(user);
     }
 
-    private DailySummary getLatestSummary() {
-        return dailySummaryRepository.findFirstByOrderByRecordDateDesc().orElseThrow();
+    private DailySummary getLatestSummary(UserProfile user) {
+        return dailySummaryRepository.findFirstByOwnerOrderByRecordDateDesc(user)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Daily summary not found"));
     }
 
-    private UserProfile getProfile() {
-        return userProfileRepository.findAll().stream().findFirst().orElseThrow();
+    private UserProfile getProfile(UserProfile user) {
+        return userProfileRepository.findById(user.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     private AppDtos.MacroProgress macro(String label, int value, int target, String unit) {
@@ -331,17 +342,18 @@ public class DashboardService {
         summary.setFat(Math.max(0, summary.getFat() - meal.getFat()));
     }
 
-    private void refreshProfileSignals(DailySummary summary) {
-        UserProfile profile = getProfile();
+    private void refreshProfileSignals(UserProfile user, DailySummary summary) {
+        UserProfile profile = getProfile(user);
         recalculateProfile(profile, summary);
         userProfileRepository.save(profile);
-        syncTrend(summary, profile);
+        syncTrend(profile, summary);
     }
 
-    private void syncTrend(DailySummary summary, UserProfile profile) {
-        TrendRecord trend = trendRecordRepository.findByRecordDate(summary.getRecordDate()).orElseGet(TrendRecord::new);
+    private void syncTrend(UserProfile user, DailySummary summary) {
+        TrendRecord trend = trendRecordRepository.findByOwnerAndRecordDate(user, summary.getRecordDate()).orElseGet(TrendRecord::new);
+        trend.setOwner(user);
         trend.setRecordDate(summary.getRecordDate());
-        trend.setWeight(profile.getWeight());
+        trend.setWeight(user.getWeight());
         trend.setSleepHours(summary.getSleepHours());
         trend.setSteps(summary.getSteps());
         trend.setCalories(summary.getCalories());
@@ -385,12 +397,12 @@ public class DashboardService {
 
     private String computeRiskLevel(UserProfile profile, DailySummary summary) {
         if (profile.getBmi() >= 28 || summary.getStressScore() >= 75 || summary.getSleepHours() < 5.5) {
-            return "高关注";
+            return "High attention";
         }
         if (profile.getBmi() >= 24 || summary.getStressScore() >= 60 || summary.getSleepHours() < 6.5) {
-            return "中等风险";
+            return "Moderate risk";
         }
-        return "稳定向好";
+        return "Stable";
     }
 
     private int calculateSleepScore(double sleepHours, int stressScore) {
@@ -432,9 +444,9 @@ public class DashboardService {
         return LocalTime.parse(value.trim());
     }
 
-    private LocalDate parseDate(String value) {
+    private LocalDate parseDate(UserProfile user, String value) {
         if (value == null || value.isBlank()) {
-            return getLatestSummary().getRecordDate();
+            return getLatestSummary(user).getRecordDate();
         }
         return LocalDate.parse(value.trim());
     }
@@ -459,29 +471,29 @@ public class DashboardService {
             .orElse(summary.getSleepHours());
 
         cards.add(new AppDtos.InsightCard(
-            proteinGap <= 0 ? "蛋白质已达标" : "蛋白质接近达标",
+            proteinGap <= 0 ? "Protein target met" : "Protein is close to target",
             proteinGap <= 0
-                ? "今天的恢复与饱腹感基础已经稳住，可以把晚间重点放在补水和放松。"
-                : String.format(Locale.ROOT, "距离目标还差 %d g，晚间加一杯无糖豆浆会更合适。", proteinGap),
+                ? "Recovery basics are stable today. Tonight can focus on hydration and light stretching."
+                : String.format(Locale.ROOT, "%d g short of target. A high-protein evening snack would fit well.", proteinGap),
             proteinGap <= 0 ? "good" : "focus"
         ));
         cards.add(new AppDtos.InsightCard(
-            waterGap <= 0 ? "饮水目标完成" : "饮水还需补充",
+            waterGap <= 0 ? "Water target completed" : "More water still needed",
             waterGap <= 0
-                ? "全天补水节奏完整，今晚不需要再集中大量饮水。"
-                : String.format(Locale.ROOT, "今天还差 %d ml，建议拆成 2 到 3 次喝完。", waterGap),
+                ? "Hydration rhythm has been steady, no need to force extra water tonight."
+                : String.format(Locale.ROOT, "%d ml remains. Splitting it into 2 or 3 rounds will be easier.", waterGap),
             waterGap <= 0 ? "good" : "calm"
         ));
         cards.add(new AppDtos.InsightCard(
-            stepGap <= 0 ? "活动量达到目标" : "晚间还可补一点活动量",
+            stepGap <= 0 ? "Activity target met" : "A little more activity would help",
             stepGap <= 0
-                ? "步数已经越过今日目标，恢复性拉伸就足够。"
-                : String.format(Locale.ROOT, "还差 %d 步，饭后快走 10 到 15 分钟最轻松。", stepGap),
+                ? "You've already crossed today's step target, so recovery-focused movement is enough."
+                : String.format(Locale.ROOT, "%d steps remain. A 10 to 15 minute walk after dinner is the easiest finish.", stepGap),
             stepGap <= 0 ? "good" : "focus"
         ));
         cards.add(new AppDtos.InsightCard(
-            "睡眠节律维持稳定",
-            String.format(Locale.ROOT, "最近 7 天平均睡眠 %.2f 小时，恢复分数处于较好区间。", averageSleep),
+            "Sleep rhythm is stable",
+            String.format(Locale.ROOT, "Average sleep over the last 7 days is %.2f hours. Keep stress in the comfortable zone.", averageSleep),
             "calm"
         ));
         return cards;
@@ -491,11 +503,11 @@ public class DashboardService {
         double weekWeightDelta = trends.size() >= 7
             ? trends.get(trends.size() - 1).getWeight() - trends.get(trends.size() - 7).getWeight()
             : 0;
-        String badge = summary.getStressScore() <= 45 ? "已同步" : "需减压";
+        String badge = summary.getStressScore() <= 45 ? "Synced" : "Reduce stress";
         String subline = weekWeightDelta <= 0
-            ? "体重趋势平稳向下，今天适合继续走轻盈、稳定的节奏。"
-            : "体重略有回弹，但恢复分数仍在线，优先守住睡眠和饮水。";
-        String headline = profile.getName() + "，从今天的状态出发，走向更轻盈、更稳定的自己。";
+            ? "Weight trend is moving down steadily. Today is a good day to keep a light and stable rhythm."
+            : "Weight has rebounded slightly, but recovery markers are still in range. Prioritize sleep and hydration.";
+        String headline = profile.getName() + ", start from today's state and move toward a lighter, steadier self.";
         return new AppDtos.RecoverySignal(headline, subline, badge);
     }
 }

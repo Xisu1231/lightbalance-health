@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import java.time.LocalDateTime;
 
 @Entity
 public class UserProfile {
@@ -14,6 +16,11 @@ public class UserProfile {
 
     private String name;
     private String handleName;
+    @Column(unique = true)
+    private String username;
+    private String passwordHash;
+    private String sessionToken;
+    private LocalDateTime createdAt;
     private String goal;
     private double weight;
     private double targetWeight;
@@ -47,6 +54,38 @@ public class UserProfile {
 
     public void setHandleName(String handleName) {
         this.handleName = handleName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public String getGoal() {

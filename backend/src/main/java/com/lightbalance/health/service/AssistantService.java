@@ -1,6 +1,7 @@
 package com.lightbalance.health.service;
 
 import com.lightbalance.health.config.DeepSeekProperties;
+import com.lightbalance.health.domain.UserProfile;
 import com.lightbalance.health.dto.AppDtos;
 import com.lightbalance.health.dto.SeedData;
 import java.time.LocalDateTime;
@@ -9,6 +10,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +25,9 @@ public class AssistantService {
     private final AnalyticsService analyticsService;
     private final DeepSeekClient deepSeekClient;
     private final DeepSeekProperties deepSeekProperties;
-    private final List<AppDtos.AssistantMessage> conversation = new CopyOnWriteArrayList<>();
+    private final SeedData.AppSeed appSeed;
     private final List<String> quickPrompts;
+    private final Map<Long, CopyOnWriteArrayList<AppDtos.AssistantMessage>> conversations = new ConcurrentHashMap<>();
 
     public AssistantService(
         DashboardService dashboardService,
@@ -36,66 +40,79 @@ public class AssistantService {
         this.analyticsService = analyticsService;
         this.deepSeekClient = deepSeekClient;
         this.deepSeekProperties = deepSeekProperties;
-        SeedData.AppSeed appSeed = resourceDataLoader.getAppSeed();
-        for (int index = 0; index < appSeed.assistantConversation().size(); index++) {
-            SeedData.ConversationSeed item = appSeed.assistantConversation().get(index);
-            conversation.add(new AppDtos.AssistantMessage(
-                item.speaker(),
-                item.tag(),
-                item.title(),
-                item.content(),
-                timeMinutesAgo(18 - (index * 3))
-            ));
-        }
+        this.appSeed = resourceDataLoader.getAppSeed();
         this.quickPrompts = appSeed.coachPrompts();
     }
 
-    public AppDtos.AssistantResponse getConversation() {
-        return new AppDtos.AssistantResponse(List.copyOf(conversation), quickPrompts, runtime());
+    public AppDtos.AssistantResponse getConversation(UserProfile user) {
+        return new AppDtos.AssistantResponse(List.copyOf(conversationFor(user)), quickPrompts, runtime());
     }
 
-    public AppDtos.AssistantResponse reply(String userMessage) {
-        conversation.add(new AppDtos.AssistantMessage("user", "你", "综合平衡", userMessage, now()));
+    public AppDtos.AssistantResponse reply(UserProfile user, String userMessage) {
+        CopyOnWriteArrayList<AppDtos.AssistantMessage> conversation = conversationFor(user);
+        conversation.add(new AppDtos.AssistantMessage("user", user.getName(), "Today", userMessage, now()));
 
-        DeepSeekClient.DeepSeekResult result = deepSeekClient.createChatCompletion(buildRequestMessages(userMessage));
+        DeepSeekClient.DeepSeekResult result = deepSeekClient.createChatCompletion(buildRequestMessages(user, conversation, userMessage));
         if (result.success()) {
-            conversation.add(new AppDtos.AssistantMessage("assistant", "DeepSeek", "智能建议", result.content(), now()));
+            conversation.add(new AppDtos.AssistantMessage("assistant", "DeepSeek", "Advice", result.content(), now()));
         } else if (!result.configured()) {
             conversation.add(new AppDtos.AssistantMessage(
                 "assistant",
                 "DeepSeek",
-                "接入提示",
-                "DeepSeek 已经集成到系统里了，但当前还没有检测到 API Key。请先配置环境变量 DEEPSEEK_API_KEY，然后重启后端服务。",
+                "Setup",
+                "DeepSeek is wired into the app, but no API key is configured yet. Please set DEEPSEEK_API_KEY and restart the backend.",
                 now()
             ));
         } else {
             conversation.add(new AppDtos.AssistantMessage(
                 "assistant",
                 "DeepSeek",
-                "服务异常",
-                "这次没有成功从 DeepSeek 拿到回复。请检查 API Key、网络或模型配置后再试一次。错误信息：" + result.errorMessage(),
+                "Error",
+                "DeepSeek did not return a valid response this time. Please check the API key, network, or model settings. Error: " + result.errorMessage(),
                 now()
             ));
         }
 
-        return getConversation();
+        return getConversation(user);
     }
 
-    public AppDtos.TrendAdviceResponse trendAdvice() {
+    public AppDtos.TrendAdviceResponse trendAdvice(UserProfile user) {
         List<DeepSeekClient.DeepSeekMessage> messages = List.of(
-            new DeepSeekClient.DeepSeekMessage("system", buildSystemPrompt()),
-            new DeepSeekClient.DeepSeekMessage("user", buildTrendAdvicePrompt())
+            new DeepSeekClient.DeepSeekMessage("system", buildSystemPrompt(user)),
+            new DeepSeekClient.DeepSeekMessage("user", buildTrendAdvicePrompt(user))
         );
         DeepSeekClient.DeepSeekResult result = deepSeekClient.createChatCompletion(messages);
         String advice;
         if (result.success()) {
             advice = result.content();
         } else if (!result.configured()) {
-            advice = "DeepSeek 当前还没有配置 API Key。趋势上看，可以先优先稳定睡眠、控制压力分，并保持最近的步数节奏；配置 DEEPSEEK_API_KEY 后这里会生成更具体的大模型建议。";
+            advice = "DeepSeek API key is not configured. For now, focus on consistent sleep, daytime hydration, and lighter training on high-stress days.";
         } else {
-            advice = "DeepSeek 暂时没有返回成功结果。先按当前趋势做保守调整：保持近 7 天平均睡眠不低于 7 小时，压力分高于 50 的日期减少高强度训练，并把饮水目标拆到白天完成。错误信息：" + result.errorMessage();
+            advice = "DeepSeek could not return a result. For now, keep sleep above 7 hours, reduce high-intensity work on stressful days, and spread hydration across the day. Error: " + result.errorMessage();
         }
         return new AppDtos.TrendAdviceResponse(advice, runtime(), now());
+    }
+
+    private CopyOnWriteArrayList<AppDtos.AssistantMessage> conversationFor(UserProfile user) {
+        return conversations.computeIfAbsent(user.getId(), ignored -> seedConversation(user));
+    }
+
+    private CopyOnWriteArrayList<AppDtos.AssistantMessage> seedConversation(UserProfile user) {
+        CopyOnWriteArrayList<AppDtos.AssistantMessage> seeded = new CopyOnWriteArrayList<>();
+        for (int index = 0; index < appSeed.assistantConversation().size(); index++) {
+            SeedData.ConversationSeed item = appSeed.assistantConversation().get(index);
+            String content = item.content()
+                .replace("\u5C0F\u660E\u8001\u5E08", user.getName())
+                .replace("\u601D\u660E\u8001\u5E08", user.getName());
+            seeded.add(new AppDtos.AssistantMessage(
+                item.speaker(),
+                item.tag(),
+                item.title(),
+                content,
+                timeMinutesAgo(18 - (index * 3))
+            ));
+        }
+        return seeded;
     }
 
     private AppDtos.AssistantRuntime runtime() {
@@ -108,9 +125,13 @@ public class AssistantService {
         );
     }
 
-    private List<DeepSeekClient.DeepSeekMessage> buildRequestMessages(String userMessage) {
+    private List<DeepSeekClient.DeepSeekMessage> buildRequestMessages(
+        UserProfile user,
+        List<AppDtos.AssistantMessage> conversation,
+        String userMessage
+    ) {
         List<DeepSeekClient.DeepSeekMessage> messages = new ArrayList<>();
-        messages.add(new DeepSeekClient.DeepSeekMessage("system", buildSystemPrompt()));
+        messages.add(new DeepSeekClient.DeepSeekMessage("system", buildSystemPrompt(user)));
 
         int historyLimit = Math.min(conversation.size(), deepSeekProperties.getMaxHistoryMessages());
         List<AppDtos.AssistantMessage> recentMessages = conversation.subList(conversation.size() - historyLimit, conversation.size());
@@ -129,8 +150,8 @@ public class AssistantService {
         return messages;
     }
 
-    private String buildSystemPrompt() {
-        AppDtos.DashboardResponse dashboard = dashboardService.getDashboard();
+    private String buildSystemPrompt(UserProfile user) {
+        AppDtos.DashboardResponse dashboard = dashboardService.getDashboard(user);
         AppDtos.AnalyticsResponse analytics = analyticsService.getAnalytics();
 
         StringBuilder macros = new StringBuilder();
@@ -147,35 +168,33 @@ public class AssistantService {
         }
 
         return """
-你是 LightBalance 健康生活分析软件中的 DeepSeek 智能助理。
+You are the DeepSeek health coach inside the LightBalance app.
+Reply in simplified Chinese. Use only the health data provided in the prompt.
+Give practical, same-day advice about food, training, hydration, recovery, and sleep.
+Do not provide medical diagnosis or medication advice.
+If a question mentions illness, medicine, or urgent symptoms, tell the user to contact a doctor.
+Keep replies clear, warm, and usually within 3 to 6 sentences.
 
-你的职责：
-1. 使用简体中文回答。
-2. 结合系统提供的健康数据，给出饮食、训练、睡眠、饮水、恢复方面的具体建议。
-3. 优先给出可执行、当日可落实的建议，避免空泛说教。
-4. 不要捏造不存在的数据；只能基于上下文中的数据和用户消息推断。
-5. 不要进行医疗诊断、药物处方或夸大风险；如果问题涉及疾病、药物或紧急症状，提醒用户及时咨询医生。
-6. 回复保持亲切、专业、具体，通常控制在 3 到 6 句话。
+Current user:
+- Current time: %s
+- Name: %s
+- Weight: %.1f kg
+- Target weight: %.1f kg
+- BMI: %.1f
+- Body fat: %.1f%%
+- Calories today: %d / %d kcal
+- Water today: %d / %d ml
+- Sleep today: %.1f h
+- Sleep score: %d
+- Steps today: %d / %d
+- Workout today: %d / %d min
+- Macro balance: %s
 
-当前用户概况：
-- 当前日期时间：%s
-- 姓名：%s
-- 当前体重：%.1f kg，目标体重：%.1f kg
-- BMI：%.1f，体脂率：%.1f%%
-- 今日热量：%d / %d kcal
-- 今日饮水：%d / %d ml
-- 今日睡眠：%.1f h，睡眠分：%d
-- 今日步数：%d / %d
-- 今日训练：%d / %d min
-- 当前营养结构：%s
-
-模型分析摘要：
-- 样本量：%d
-- 高风险样本：%d
-- 当前表现最好的模型：%s
-- 逻辑回归 Accuracy：%.2f%%
-
-请把回答做成一个真正有帮助的健康教练，而不是泛泛的聊天机器人。
+Model summary:
+- Sample count: %d
+- High-risk rows: %d
+- Best model: %s
+- Logistic regression accuracy: %.2f%%
 """.formatted(
             LocalDateTime.now(APP_ZONE).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
             dashboard.profile().name(),
@@ -201,8 +220,8 @@ public class AssistantService {
         );
     }
 
-    private String buildTrendAdvicePrompt() {
-        AppDtos.DashboardResponse dashboard = dashboardService.getDashboard();
+    private String buildTrendAdvicePrompt(UserProfile user) {
+        AppDtos.DashboardResponse dashboard = dashboardService.getDashboard(user);
         List<AppDtos.TrendPoint> recent = dashboard.trends()
             .stream()
             .skip(Math.max(0, dashboard.trends().size() - 7))
@@ -214,26 +233,26 @@ public class AssistantService {
             }
             trendLines.append("- ")
                 .append(point.date())
-                .append(": 体重 ")
+                .append(": weight ")
                 .append(point.weight())
-                .append(" kg，睡眠 ")
+                .append(" kg, sleep ")
                 .append(point.sleepHours())
-                .append(" h，步数 ")
+                .append(" h, steps ")
                 .append(point.steps())
-                .append("，热量 ")
+                .append(", calories ")
                 .append(point.calories())
-                .append(" kcal，压力 ")
+                .append(" kcal, stress ")
                 .append(point.stressScore());
         }
         return """
-请根据最近 7 条趋势数据，给出一段简短但具体的趋势建议。
-要求：
-1. 先判断体重、睡眠、压力三个方向的趋势。
-2. 给出接下来 24 小时最该做的 3 个动作。
-3. 不要夸大风险，不要医疗诊断。
-4. 控制在 120 字以内。
+Based on the last 7 trend entries, produce a concise trend recommendation in simplified Chinese.
+Requirements:
+1. Judge the trends for weight, sleep, and stress.
+2. Give the 3 most important actions for the next 24 hours.
+3. Do not make medical claims.
+4. Keep it under 120 Chinese characters.
 
-最近趋势：
+Recent trends:
 %s
 """.formatted(trendLines);
     }
