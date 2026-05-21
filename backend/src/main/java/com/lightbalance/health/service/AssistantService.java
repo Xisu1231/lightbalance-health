@@ -50,25 +50,25 @@ public class AssistantService {
 
     public AppDtos.AssistantResponse reply(UserProfile user, String userMessage) {
         CopyOnWriteArrayList<AppDtos.AssistantMessage> conversation = conversationFor(user);
-        conversation.add(new AppDtos.AssistantMessage("user", user.getName(), "Today", userMessage, now()));
+        conversation.add(new AppDtos.AssistantMessage("user", user.getName(), "今日记录", userMessage, now()));
 
         DeepSeekClient.DeepSeekResult result = deepSeekClient.createChatCompletion(buildRequestMessages(user, conversation, userMessage));
         if (result.success()) {
-            conversation.add(new AppDtos.AssistantMessage("assistant", "DeepSeek", "Advice", result.content(), now()));
+            conversation.add(new AppDtos.AssistantMessage("assistant", "DeepSeek", "智能建议", result.content(), now()));
         } else if (!result.configured()) {
             conversation.add(new AppDtos.AssistantMessage(
                 "assistant",
                 "DeepSeek",
-                "Setup",
-                "DeepSeek is wired into the app, but no API key is configured yet. Please set DEEPSEEK_API_KEY and restart the backend.",
+                "配置提醒",
+                "DeepSeek 已接入系统，但当前没有检测到可用的 API Key。请在部署环境中配置 DEEPSEEK_API_KEY 后重新部署。",
                 now()
             ));
         } else {
             conversation.add(new AppDtos.AssistantMessage(
                 "assistant",
                 "DeepSeek",
-                "Error",
-                "DeepSeek did not return a valid response this time. Please check the API key, network, or model settings. Error: " + result.errorMessage(),
+                "调用异常",
+                "这次 DeepSeek 没有成功返回结果，请检查 API Key、网络或模型配置。错误信息：" + result.errorMessage(),
                 now()
             ));
         }
@@ -86,9 +86,9 @@ public class AssistantService {
         if (result.success()) {
             advice = result.content();
         } else if (!result.configured()) {
-            advice = "DeepSeek API key is not configured. For now, focus on consistent sleep, daytime hydration, and lighter training on high-stress days.";
+            advice = "当前还没有配置 DeepSeek API Key。先优先保证睡眠规律、白天分次补水，并在高压力日把训练强度降一级。";
         } else {
-            advice = "DeepSeek could not return a result. For now, keep sleep above 7 hours, reduce high-intensity work on stressful days, and spread hydration across the day. Error: " + result.errorMessage();
+            advice = "DeepSeek 这次没有成功返回结果。先把睡眠守在 7 小时以上，压力高的日子降低高强度训练，并把补水分散到全天。错误信息：" + result.errorMessage();
         }
         return new AppDtos.TrendAdviceResponse(advice, runtime(), now());
     }
@@ -168,33 +168,33 @@ public class AssistantService {
         }
 
         return """
-You are the DeepSeek health coach inside the LightBalance app.
-Reply in simplified Chinese. Use only the health data provided in the prompt.
-Give practical, same-day advice about food, training, hydration, recovery, and sleep.
-Do not provide medical diagnosis or medication advice.
-If a question mentions illness, medicine, or urgent symptoms, tell the user to contact a doctor.
-Keep replies clear, warm, and usually within 3 to 6 sentences.
+你是 LightBalance 应用内的 DeepSeek 健康教练。
+请只依据提示中提供的数据，用简体中文回答。
+请给出当天就能执行的饮食、训练、补水、恢复和睡眠建议。
+不要给出医学诊断、用药建议或夸大判断。
+如果用户提到疾病、药物或紧急症状，请明确建议联系医生。
+语气温和、结论明确，通常控制在 3 到 6 句。
 
-Current user:
-- Current time: %s
-- Name: %s
-- Weight: %.1f kg
-- Target weight: %.1f kg
-- BMI: %.1f
-- Body fat: %.1f%%
-- Calories today: %d / %d kcal
-- Water today: %d / %d ml
-- Sleep today: %.1f h
-- Sleep score: %d
-- Steps today: %d / %d
-- Workout today: %d / %d min
-- Macro balance: %s
+当前用户信息：
+- 当前时间：%s
+- 姓名：%s
+- 当前体重：%.1f kg
+- 目标体重：%.1f kg
+- BMI：%.1f
+- 体脂率：%.1f%%
+- 今日热量：%d / %d kcal
+- 今日饮水：%d / %d ml
+- 今日睡眠：%.1f h
+- 睡眠评分：%d
+- 今日步数：%d / %d
+- 今日训练：%d / %d min
+- 营养结构：%s
 
-Model summary:
-- Sample count: %d
-- High-risk rows: %d
-- Best model: %s
-- Logistic regression accuracy: %.2f%%
+模型摘要：
+- 样本量：%d
+- 高风险样本：%d
+- 当前最佳模型：%s
+- 逻辑回归准确率：%.2f%%
 """.formatted(
             LocalDateTime.now(APP_ZONE).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
             dashboard.profile().name(),
@@ -245,14 +245,14 @@ Model summary:
                 .append(point.stressScore());
         }
         return """
-Based on the last 7 trend entries, produce a concise trend recommendation in simplified Chinese.
-Requirements:
-1. Judge the trends for weight, sleep, and stress.
-2. Give the 3 most important actions for the next 24 hours.
-3. Do not make medical claims.
-4. Keep it under 120 Chinese characters.
+请基于最近 7 条趋势记录，生成一段简洁的中文趋势建议。
+要求：
+1. 判断体重、睡眠和压力的变化趋势。
+2. 给出接下来 24 小时最重要的 3 个行动建议。
+3. 不要给出医疗结论。
+4. 尽量控制在 120 个汉字以内。
 
-Recent trends:
+最近趋势：
 %s
 """.formatted(trendLines);
     }

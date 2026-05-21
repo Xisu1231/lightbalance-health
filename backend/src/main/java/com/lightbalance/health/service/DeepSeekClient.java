@@ -31,10 +31,10 @@ public class DeepSeekClient {
 
     public DeepSeekResult createChatCompletion(List<DeepSeekMessage> messages) {
         if (!properties.isEnabled()) {
-            return DeepSeekResult.unavailable("DeepSeek integration is disabled in configuration.");
+            return DeepSeekResult.unavailable("DeepSeek 集成已在配置中关闭。");
         }
         if (!StringUtils.hasText(properties.getApiKey())) {
-            return DeepSeekResult.unavailable("DeepSeek API key is missing. Set DEEPSEEK_API_KEY before starting the backend.");
+            return DeepSeekResult.unavailable("未检测到 DeepSeek API Key，请先配置 DEEPSEEK_API_KEY。");
         }
 
         try {
@@ -55,34 +55,46 @@ public class DeepSeekClient {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
-                return DeepSeekResult.error("DeepSeek API request failed with status " + response.statusCode() + ".");
+                return DeepSeekResult.error("DeepSeek 接口返回异常（HTTP " + response.statusCode() + "）："
+                    + abbreviate(response.body(), 220));
             }
 
             DeepSeekResponse parsed = objectMapper.readValue(response.body(), DeepSeekResponse.class);
             if (parsed.choices() == null || parsed.choices().isEmpty() || parsed.choices().get(0).message() == null) {
-                return DeepSeekResult.error("DeepSeek API returned an empty response.");
+                return DeepSeekResult.error("DeepSeek 返回内容为空。");
             }
 
             String content = parsed.choices().get(0).message().content();
             if (!StringUtils.hasText(content)) {
-                return DeepSeekResult.error("DeepSeek API returned a blank answer.");
+                return DeepSeekResult.error("DeepSeek 返回了空白回答。");
             }
 
             return DeepSeekResult.success(content.trim(), properties.getModel());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            return DeepSeekResult.error("DeepSeek request failed: " + ex.getMessage());
+            return DeepSeekResult.error("DeepSeek 请求被中断：" + ex.getMessage());
         } catch (IOException ex) {
-            return DeepSeekResult.error("DeepSeek request failed: " + ex.getMessage());
+            return DeepSeekResult.error("DeepSeek 请求失败：" + ex.getMessage());
         }
     }
 
     public DeepSeekRuntime runtime() {
         boolean ready = properties.isEnabled() && StringUtils.hasText(properties.getApiKey());
         String status = ready
-            ? "DeepSeek connected"
-            : "DeepSeek not configured. Set DEEPSEEK_API_KEY and restart the backend.";
+            ? "DeepSeek 已连接"
+            : "DeepSeek 未配置，请填写 DEEPSEEK_API_KEY 后重新部署。";
         return new DeepSeekRuntime("DeepSeek", properties.getModel(), ready, status);
+    }
+
+    private String abbreviate(String text, int maxLength) {
+        if (!StringUtils.hasText(text)) {
+            return "无返回内容";
+        }
+        String normalized = text.replaceAll("\\s+", " ").trim();
+        if (normalized.length() <= maxLength) {
+            return normalized;
+        }
+        return normalized.substring(0, maxLength) + "...";
     }
 
     public record DeepSeekMessage(String role, String content) {

@@ -30,7 +30,7 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
-    let detail = `Request failed: ${response.status}`;
+    let detail = `请求失败：${response.status}`;
     try {
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {

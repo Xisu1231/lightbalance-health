@@ -90,9 +90,9 @@ public class DashboardService {
                 summary.getStressScore()
             ),
             List.of(
-                macro("Protein", summary.getProtein(), summary.getProteinTarget(), "g"),
-                macro("Carbs", summary.getCarbs(), summary.getCarbsTarget(), "g"),
-                macro("Fat", summary.getFat(), summary.getFatTarget(), "g")
+                macro("蛋白质", summary.getProtein(), summary.getProteinTarget(), "g"),
+                macro("碳水", summary.getCarbs(), summary.getCarbsTarget(), "g"),
+                macro("脂肪", summary.getFat(), summary.getFatTarget(), "g")
             ),
             meals.stream()
                 .map(meal -> new AppDtos.MealCard(
@@ -138,7 +138,7 @@ public class DashboardService {
     @Transactional
     public AppDtos.DashboardResponse consumeMeal(UserProfile user, Long mealId) {
         MealEntry meal = mealEntryRepository.findByIdAndOwner(mealId, user)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到对应餐食"));
         if (!meal.isEaten()) {
             meal.setEaten(true);
             mealEntryRepository.save(meal);
@@ -154,7 +154,7 @@ public class DashboardService {
     @Transactional
     public AppDtos.DashboardResponse deleteMeal(UserProfile user, Long mealId) {
         MealEntry meal = mealEntryRepository.findByIdAndOwner(mealId, user)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到对应餐食"));
         if (meal.isEaten()) {
             DailySummary summary = getLatestSummary(user);
             removeMeal(summary, meal);
@@ -177,7 +177,7 @@ public class DashboardService {
     @Transactional
     public AppDtos.DashboardResponse toggleWorkout(UserProfile user, Long workoutId) {
         WorkoutPlan workout = workoutPlanRepository.findByIdAndOwner(workoutId, user)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到对应训练计划"));
         DailySummary summary = getLatestSummary(user);
         if (workout.isCompleted()) {
             workout.setCompleted(false);
@@ -195,7 +195,7 @@ public class DashboardService {
     @Transactional
     public AppDtos.DashboardResponse deleteWorkout(UserProfile user, Long workoutId) {
         WorkoutPlan workout = workoutPlanRepository.findByIdAndOwner(workoutId, user)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到对应训练计划"));
         if (workout.isCompleted()) {
             DailySummary summary = getLatestSummary(user);
             summary.setWorkoutMinutes(Math.max(0, summary.getWorkoutMinutes() - workout.getDuration()));
@@ -249,9 +249,9 @@ public class DashboardService {
     public AppDtos.DashboardResponse createMeal(UserProfile user, AppDtos.MealCreateRequest request) {
         MealEntry meal = new MealEntry();
         meal.setOwner(user);
-        meal.setName(textOrDefault(request.name(), "Custom meal"));
-        meal.setMealType(textOrDefault(request.mealType(), "Snack"));
-        meal.setPortion(textOrDefault(request.portion(), "1 serving"));
+        meal.setName(textOrDefault(request.name(), "自定义餐食"));
+        meal.setMealType(textOrDefault(request.mealType(), "加餐"));
+        meal.setPortion(textOrDefault(request.portion(), "1 份"));
         meal.setCalories(Math.max(0, request.calories()));
         meal.setProtein(Math.max(0, request.protein()));
         meal.setCarbs(Math.max(0, request.carbs()));
@@ -274,11 +274,11 @@ public class DashboardService {
     public AppDtos.DashboardResponse createWorkout(UserProfile user, AppDtos.WorkoutCreateRequest request) {
         WorkoutPlan workout = new WorkoutPlan();
         workout.setOwner(user);
-        workout.setTitle(textOrDefault(request.title(), "Custom workout"));
-        workout.setCategory(textOrDefault(request.category(), "Functional training"));
+        workout.setTitle(textOrDefault(request.title(), "自定义训练"));
+        workout.setCategory(textOrDefault(request.category(), "功能性训练"));
         workout.setDuration(Math.max(5, request.duration()));
         workout.setCaloriesBurned(Math.max(0, request.caloriesBurned()));
-        workout.setIntensity(textOrDefault(request.intensity(), "Moderate"));
+        workout.setIntensity(textOrDefault(request.intensity(), "中等"));
         workout.setCompleted(false);
         workoutPlanRepository.save(workout);
         return getDashboard(user);
@@ -315,12 +315,12 @@ public class DashboardService {
 
     private DailySummary getLatestSummary(UserProfile user) {
         return dailySummaryRepository.findFirstByOwnerOrderByRecordDateDesc(user)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Daily summary not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到今日摘要数据"));
     }
 
     private UserProfile getProfile(UserProfile user) {
         return userProfileRepository.findById(user.getId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到用户信息"));
     }
 
     private AppDtos.MacroProgress macro(String label, int value, int target, String unit) {
@@ -397,12 +397,12 @@ public class DashboardService {
 
     private String computeRiskLevel(UserProfile profile, DailySummary summary) {
         if (profile.getBmi() >= 28 || summary.getStressScore() >= 75 || summary.getSleepHours() < 5.5) {
-            return "High attention";
+            return "高关注";
         }
         if (profile.getBmi() >= 24 || summary.getStressScore() >= 60 || summary.getSleepHours() < 6.5) {
-            return "Moderate risk";
+            return "中等风险";
         }
-        return "Stable";
+        return "状态稳定";
     }
 
     private int calculateSleepScore(double sleepHours, int stressScore) {
@@ -471,29 +471,29 @@ public class DashboardService {
             .orElse(summary.getSleepHours());
 
         cards.add(new AppDtos.InsightCard(
-            proteinGap <= 0 ? "Protein target met" : "Protein is close to target",
+            proteinGap <= 0 ? "蛋白质已达标" : "蛋白质还差一点",
             proteinGap <= 0
-                ? "Recovery basics are stable today. Tonight can focus on hydration and light stretching."
-                : String.format(Locale.ROOT, "%d g short of target. A high-protein evening snack would fit well.", proteinGap),
+                ? "今天的恢复基础已经比较稳，晚上更适合把重点放在补水和轻度拉伸。"
+                : String.format(Locale.ROOT, "距离目标还差 %d g，晚上补一份高蛋白加餐会更合适。", proteinGap),
             proteinGap <= 0 ? "good" : "focus"
         ));
         cards.add(new AppDtos.InsightCard(
-            waterGap <= 0 ? "Water target completed" : "More water still needed",
+            waterGap <= 0 ? "饮水目标已完成" : "今天还需要继续补水",
             waterGap <= 0
-                ? "Hydration rhythm has been steady, no need to force extra water tonight."
-                : String.format(Locale.ROOT, "%d ml remains. Splitting it into 2 or 3 rounds will be easier.", waterGap),
+                ? "今天的补水节奏已经比较稳，晚上不需要再刻意灌水。"
+                : String.format(Locale.ROOT, "还差 %d ml，分成 2 到 3 次喝完会更轻松。", waterGap),
             waterGap <= 0 ? "good" : "calm"
         ));
         cards.add(new AppDtos.InsightCard(
-            stepGap <= 0 ? "Activity target met" : "A little more activity would help",
+            stepGap <= 0 ? "活动目标已达成" : "再补一点活动量更好",
             stepGap <= 0
-                ? "You've already crossed today's step target, so recovery-focused movement is enough."
-                : String.format(Locale.ROOT, "%d steps remain. A 10 to 15 minute walk after dinner is the easiest finish.", stepGap),
+                ? "今天已经超过步数目标，后半天以恢复型活动为主就够了。"
+                : String.format(Locale.ROOT, "还差 %d 步，晚饭后走 10 到 15 分钟最容易补齐。", stepGap),
             stepGap <= 0 ? "good" : "focus"
         ));
         cards.add(new AppDtos.InsightCard(
-            "Sleep rhythm is stable",
-            String.format(Locale.ROOT, "Average sleep over the last 7 days is %.2f hours. Keep stress in the comfortable zone.", averageSleep),
+            "睡眠节律总体稳定",
+            String.format(Locale.ROOT, "最近 7 天平均睡眠 %.2f 小时，继续把压力维持在舒适区会更稳。", averageSleep),
             "calm"
         ));
         return cards;
@@ -503,11 +503,11 @@ public class DashboardService {
         double weekWeightDelta = trends.size() >= 7
             ? trends.get(trends.size() - 1).getWeight() - trends.get(trends.size() - 7).getWeight()
             : 0;
-        String badge = summary.getStressScore() <= 45 ? "Synced" : "Reduce stress";
+        String badge = summary.getStressScore() <= 45 ? "已同步" : "先降压力";
         String subline = weekWeightDelta <= 0
-            ? "Weight trend is moving down steadily. Today is a good day to keep a light and stable rhythm."
-            : "Weight has rebounded slightly, but recovery markers are still in range. Prioritize sleep and hydration.";
-        String headline = profile.getName() + ", start from today's state and move toward a lighter, steadier self.";
+            ? "最近体重趋势在稳步向下，今天适合继续保持轻盈、稳定的节奏。"
+            : "体重最近有一点回弹，但恢复指标仍在可控范围内，先把睡眠和补水守住。";
+        String headline = profile.getName() + "，就从今天的状态出发，走向更轻盈、更稳定的自己。";
         return new AppDtos.RecoverySignal(headline, subline, badge);
     }
 }

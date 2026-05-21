@@ -74,7 +74,7 @@ public class AdminService {
     public void resetUserPassword(UserProfile currentUser, Long userId, AppDtos.AdminResetPasswordRequest request) {
         authService.requireAdmin(currentUser);
         UserProfile target = userProfileRepository.findById(userId)
-            .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "User not found"));
+            .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "未找到该用户"));
         target.setPasswordHash(authService.encodePassword(request.newPassword()));
         target.setSessionToken(java.util.UUID.randomUUID().toString().replace("-", ""));
         userProfileRepository.save(target);

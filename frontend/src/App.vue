@@ -113,7 +113,7 @@
     <main class="workspace" v-if="dashboard && analytics && assistant">
       <header class="workspace-header">
         <div>
-          <p class="kicker">Healthy Lifestyle Analysis</p>
+          <p class="kicker">健康生活分析</p>
           <h2>{{ dashboard.recoverySignal.headline }}</h2>
           <p class="subcopy">把健康记录、趋势分析、账号安全和管理员能力放进同一个工作台里，既适合演示，也更接近真实软件。</p>
         </div>
@@ -142,7 +142,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Live Overview</p>
+                <p class="kicker">实时总览</p>
                 <h3>今天的状态总览</h3>
               </div>
               <div class="chip-row">
@@ -181,7 +181,7 @@
           <section class="panel macro-panel">
             <div class="panel-head compact">
               <div>
-                <p class="kicker">Macro Balance</p>
+                <p class="kicker">营养结构</p>
                 <h3>营养结构</h3>
               </div>
             </div>
@@ -201,7 +201,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Daily Check-in</p>
+                <p class="kicker">每日回填</p>
                 <h3>今日数据回填</h3>
               </div>
             </div>
@@ -254,7 +254,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Signals</p>
+                <p class="kicker">行动提醒</p>
                 <h3>今日行动提示</h3>
               </div>
             </div>
@@ -282,7 +282,7 @@
         <section class="panel">
           <div class="panel-head">
             <div>
-              <p class="kicker">Weekly Rhythm</p>
+              <p class="kicker">每周节律</p>
               <h3>恢复趋势</h3>
             </div>
           </div>
@@ -295,7 +295,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Body Portrait</p>
+                <p class="kicker">身体画像</p>
                 <h3>身体画像</h3>
               </div>
             </div>
@@ -327,7 +327,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Profile Editor</p>
+                <p class="kicker">画像编辑</p>
                 <h3>目标与身体参数</h3>
               </div>
             </div>
@@ -382,7 +382,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Risk Scatter</p>
+                <p class="kicker">风险散点</p>
                 <h3>睡眠与压力分布</h3>
               </div>
             </div>
@@ -392,7 +392,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Dataset Summary</p>
+                <p class="kicker">样本概览</p>
                 <h3>建模样本摘要</h3>
               </div>
             </div>
@@ -428,7 +428,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Quick Add</p>
+                <p class="kicker">快捷录入</p>
                 <h3>餐食记录</h3>
               </div>
             </div>
@@ -456,7 +456,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Custom Meal</p>
+                <p class="kicker">自定义餐食</p>
                 <h3>自定义餐食</h3>
               </div>
             </div>
@@ -517,7 +517,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Training Flow</p>
+                <p class="kicker">训练流程</p>
                 <h3>训练计划</h3>
               </div>
             </div>
@@ -545,7 +545,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Custom Workout</p>
+                <p class="kicker">自定义训练</p>
                 <h3>自定义训练</h3>
               </div>
             </div>
@@ -590,7 +590,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Trend Tracker</p>
+                <p class="kicker">趋势追踪</p>
                 <h3>趋势追踪</h3>
               </div>
             </div>
@@ -642,7 +642,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">DeepSeek Trend Coach</p>
+                <p class="kicker">DeepSeek 趋势教练</p>
                 <h3>趋势智能建议</h3>
               </div>
             </div>
@@ -663,7 +663,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Model Compare</p>
+                <p class="kicker">模型对比</p>
                 <h3>模型评估结果</h3>
               </div>
             </div>
@@ -672,19 +672,19 @@
               <article v-for="model in analytics.models" :key="model.model" class="model-card">
                 <strong>{{ model.model }}</strong>
                 <div class="metric-row">
-                  <span>Accuracy</span>
+                  <span>准确率</span>
                   <b>{{ formatPercent(model.accuracy) }}</b>
                 </div>
                 <div class="metric-row">
-                  <span>Precision</span>
+                  <span>精确率</span>
                   <b>{{ formatPercent(model.precision) }}</b>
                 </div>
                 <div class="metric-row">
-                  <span>Recall</span>
+                  <span>召回率</span>
                   <b>{{ formatPercent(model.recall) }}</b>
                 </div>
                 <div class="metric-row">
-                  <span>F1</span>
+                  <span>F1 值</span>
                   <b>{{ formatPercent(model.f1) }}</b>
                 </div>
               </article>
@@ -694,7 +694,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">BMI Risk Bands</p>
+                <p class="kicker">BMI 风险区间</p>
                 <h3>BMI 风险区间</h3>
               </div>
             </div>
@@ -708,7 +708,7 @@
           <section class="panel panel--chat">
             <div class="panel-head">
               <div>
-                <p class="kicker">Astra Coach</p>
+                <p class="kicker">Astra 助手</p>
                 <h3>智能建议</h3>
                 <p class="assistant-runtime">
                   {{ assistant.runtime.provider }} · {{ assistant.runtime.model }} · {{ assistant.runtime.status }}
@@ -762,7 +762,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Account Security</p>
+                <p class="kicker">账号安全</p>
                 <h3>修改密码</h3>
                 <p class="section-note">修改后会刷新登录令牌，当前设备会自动保持登录。</p>
               </div>
@@ -789,7 +789,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Account Snapshot</p>
+                <p class="kicker">账号快照</p>
                 <h3>当前账号信息</h3>
               </div>
             </div>
@@ -825,7 +825,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">Admin Summary</p>
+                <p class="kicker">管理概览</p>
                 <h3>管理员后台</h3>
               </div>
               <button class="secondary-button" @click="loadAdminUsers" :disabled="busy.adminLoad">
@@ -854,7 +854,7 @@
         <section class="panel">
           <div class="panel-head">
             <div>
-              <p class="kicker">User List</p>
+              <p class="kicker">用户列表</p>
               <h3>用户列表</h3>
             </div>
           </div>

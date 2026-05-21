@@ -37,7 +37,7 @@ public class AuthService {
         String username = normalizeUsername(request.username());
         String password = normalizePassword(request.password());
         if (userProfileRepository.findByUsername(username).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "该账号已存在");
         }
 
         UserProfile profile = new UserProfile();
@@ -57,10 +57,10 @@ public class AuthService {
         String username = normalizeUsername(request.username());
         String passwordHash = hashPassword(normalizePassword(request.password()));
         UserProfile profile = userProfileRepository.findByUsername(username)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "账号或密码错误"));
 
         if (!passwordHash.equals(profile.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "账号或密码错误");
         }
 
         profile.setSessionToken(generateToken());
@@ -77,7 +77,7 @@ public class AuthService {
         UserProfile profile = requireCurrentUser(request);
         String currentPasswordHash = hashPassword(normalizePassword(passwordRequest.currentPassword()));
         if (!currentPasswordHash.equals(profile.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "当前密码不正确");
         }
         profile.setPasswordHash(hashPassword(normalizePassword(passwordRequest.newPassword())));
         profile.setSessionToken(generateToken());
@@ -89,11 +89,11 @@ public class AuthService {
         String username = normalizeUsername(request.username());
         String newPassword = normalizePassword(request.newPassword());
         UserProfile profile = userProfileRepository.findByUsername(username)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到该账号"));
 
         String providedName = normalizeName(request.name(), "");
         if (!profile.getName().equalsIgnoreCase(providedName)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Display name does not match this account");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "显示名称与该账号不匹配");
         }
 
         profile.setPasswordHash(hashPassword(newPassword));
@@ -112,10 +112,10 @@ public class AuthService {
     public UserProfile requireCurrentUser(HttpServletRequest request) {
         String token = extractBearerToken(request);
         if (token == null || token.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please log in first");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "请先登录");
         }
         return userProfileRepository.findBySessionToken(token)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Session expired, please log in again"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "登录状态已失效，请重新登录"));
     }
 
     private AppDtos.AuthResponse toAuthResponse(UserProfile profile) {
@@ -134,7 +134,7 @@ public class AuthService {
 
     public void requireAdmin(UserProfile profile) {
         if (!isAdmin(profile)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "需要管理员权限");
         }
     }
 
@@ -156,16 +156,16 @@ public class AuthService {
 
     private String normalizeUsername(String value) {
         if (value == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "请输入账号");
         }
         String username = value.trim().toLowerCase();
         if (username.length() < 4 || username.length() > 24) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username must be 4 to 24 characters");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "账号长度需在 4 到 24 位之间");
         }
         if (!username.matches("[a-z0-9_]+")) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "Username only supports lowercase letters, numbers, and underscores"
+                "账号仅支持小写字母、数字和下划线"
             );
         }
         return username;
@@ -173,7 +173,7 @@ public class AuthService {
 
     private String normalizePassword(String value) {
         if (value == null || value.trim().length() < 6) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "密码至少需要 6 位");
         }
         return value.trim();
     }
@@ -194,7 +194,7 @@ public class AuthService {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(password.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 not available", exception);
+            throw new IllegalStateException("系统暂不支持 SHA-256 加密", exception);
         }
     }
 }
