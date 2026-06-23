@@ -151,6 +151,10 @@ public class AuthService {
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7).trim();
         }
+        String fallbackHeader = request.getHeader("X-Session-Token");
+        if (fallbackHeader != null && !fallbackHeader.isBlank()) {
+            return fallbackHeader.trim();
+        }
         return null;
     }
 
