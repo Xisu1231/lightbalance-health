@@ -151,6 +151,51 @@ public final class AppDtos {
     ) {
     }
 
+    public record NutritionSearchResponse(
+        String query,
+        int total,
+        String sourceSummary,
+        List<NutritionFoodOption> items
+    ) {
+    }
+
+    public record NutritionFoodOption(
+        String id,
+        String name,
+        String category,
+        int caloriesPer100g,
+        double proteinPer100g,
+        double carbsPer100g,
+        double fatPer100g,
+        double fiberPer100g,
+        String source
+    ) {
+    }
+
+    public record NutritionEstimateRequest(
+        String query,
+        int grams
+    ) {
+    }
+
+    public record NutritionEstimateResponse(
+        String query,
+        String matchedName,
+        String category,
+        int grams,
+        String portion,
+        int calories,
+        double protein,
+        double carbs,
+        double fat,
+        double fiber,
+        String confidence,
+        String source,
+        String note,
+        List<NutritionFoodOption> relatedFoods
+    ) {
+    }
+
     public record WorkoutCreateRequest(
         String title,
         String category,

@@ -3,6 +3,7 @@ package com.lightbalance.health.web;
 import com.lightbalance.health.dto.AppDtos;
 import com.lightbalance.health.service.AuthService;
 import com.lightbalance.health.service.DashboardService;
+import com.lightbalance.health.service.NutritionKnowledgeService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,10 +21,16 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
     private final AuthService authService;
+    private final NutritionKnowledgeService nutritionKnowledgeService;
 
-    public DashboardController(DashboardService dashboardService, AuthService authService) {
+    public DashboardController(
+        DashboardService dashboardService,
+        AuthService authService,
+        NutritionKnowledgeService nutritionKnowledgeService
+    ) {
         this.dashboardService = dashboardService;
         this.authService = authService;
+        this.nutritionKnowledgeService = nutritionKnowledgeService;
     }
 
     @GetMapping
@@ -67,6 +75,25 @@ public class DashboardController {
         @Valid @RequestBody AppDtos.MealCreateRequest request
     ) {
         return dashboardService.createMeal(authService.requireCurrentUser(servletRequest), request);
+    }
+
+    @GetMapping("/nutrition/search")
+    public AppDtos.NutritionSearchResponse searchFoods(
+        HttpServletRequest servletRequest,
+        @RequestParam String q,
+        @RequestParam(defaultValue = "6") int limit
+    ) {
+        authService.requireCurrentUser(servletRequest);
+        return nutritionKnowledgeService.search(q, limit);
+    }
+
+    @PostMapping("/nutrition/estimate")
+    public AppDtos.NutritionEstimateResponse estimateNutrition(
+        HttpServletRequest servletRequest,
+        @Valid @RequestBody AppDtos.NutritionEstimateRequest request
+    ) {
+        authService.requireCurrentUser(servletRequest);
+        return nutritionKnowledgeService.estimate(request.query(), request.grams());
     }
 
     @PostMapping("/workouts/{workoutId}/toggle")

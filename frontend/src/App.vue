@@ -727,6 +727,106 @@
             </div>
 
             <form class="editor-grid" @submit.prevent="saveMeal">
+              <div class="nutrition-builder form-field--wide">
+                <div class="nutrition-builder__head">
+                  <div>
+                    <span>智能营养估算</span>
+                    <strong>输入菜名或食材后自动填充热量与三大营养素</strong>
+                  </div>
+                  <small>优先匹配常见蔬菜、菌菇、豆制品和基础主食，复杂菜品可在结果基础上微调。</small>
+                </div>
+
+                <div class="nutrition-toolbar">
+                  <label class="form-field form-field--wide">
+                    <span>菜品 / 食材名称</span>
+                    <input
+                      v-model.trim="nutritionForm.query"
+                      type="text"
+                      placeholder="例如：西兰花、番茄炒蛋、香菇豆腐、玉米"
+                    />
+                  </label>
+                  <label class="form-field">
+                    <span>估算克数</span>
+                    <input v-model.number="nutritionForm.grams" type="number" min="50" step="10" />
+                  </label>
+                  <div class="nutrition-toolbar__actions">
+                    <button
+                      class="ghost-button"
+                      type="button"
+                      :disabled="busy.nutritionSearch"
+                      @click="searchNutritionFoods"
+                    >
+                      <span>{{ busy.nutritionSearch ? '搜索中...' : '搜索食材' }}</span>
+                    </button>
+                    <button
+                      class="primary-button"
+                      type="button"
+                      :disabled="busy.nutritionEstimate"
+                      @click="estimateNutrition"
+                    >
+                      <Sparkles :size="16" />
+                      <span>{{ busy.nutritionEstimate ? '估算中...' : '智能填充' }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <p v-if="nutritionSearch.sourceSummary" class="nutrition-source">{{ nutritionSearch.sourceSummary }}</p>
+
+                <div v-if="nutritionSearch.items.length" class="nutrition-results">
+                  <button
+                    v-for="item in nutritionSearch.items"
+                    :key="item.id"
+                    type="button"
+                    class="nutrition-result"
+                    :class="{ active: nutritionEstimate.matchedName === item.name }"
+                    @click="applySuggestion(item)"
+                  >
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.category }} · 每 100 g 约 {{ item.caloriesPer100g }} kcal</span>
+                    <small>P {{ item.proteinPer100g }} · C {{ item.carbsPer100g }} · F {{ item.fatPer100g }}</small>
+                  </button>
+                </div>
+
+                <div v-if="nutritionEstimate.matchedName" class="nutrition-estimate">
+                  <div class="nutrition-estimate__summary">
+                    <div>
+                      <span>已匹配</span>
+                      <strong>{{ nutritionEstimate.matchedName }}</strong>
+                    </div>
+                    <div>
+                      <span>份量</span>
+                      <strong>{{ nutritionEstimate.portion }}</strong>
+                    </div>
+                    <div>
+                      <span>匹配可信度</span>
+                      <strong>{{ nutritionEstimate.confidence }}</strong>
+                    </div>
+                  </div>
+                  <div class="nutrition-estimate__metrics">
+                    <article>
+                      <span>热量</span>
+                      <strong>{{ nutritionEstimate.calories }} kcal</strong>
+                    </article>
+                    <article>
+                      <span>蛋白质</span>
+                      <strong>{{ nutritionEstimate.protein }} g</strong>
+                    </article>
+                    <article>
+                      <span>碳水</span>
+                      <strong>{{ nutritionEstimate.carbs }} g</strong>
+                    </article>
+                    <article>
+                      <span>脂肪</span>
+                      <strong>{{ nutritionEstimate.fat }} g</strong>
+                    </article>
+                  </div>
+                  <p>{{ nutritionEstimate.note }}</p>
+                </div>
+
+                <div v-if="nutritionEstimate.matchedName" class="nutrition-helper-tip">
+                  当前保存会直接把这份估算写入餐食记录，你也可以继续修改下面的数值后再保存。
+                </div>
+              </div>
               <label class="form-field form-field--wide">
                 <span>餐食名称</span>
                 <input v-model="mealForm.name" type="text" />
@@ -1504,6 +1604,8 @@ const busy = reactive({
   meal: false,
   mealConsume: false,
   mealDelete: false,
+  nutritionSearch: false,
+  nutritionEstimate: false,
   workout: false,
   workoutToggle: false,
   workoutDelete: false,
@@ -1548,6 +1650,15 @@ const checkinForm = reactive({
 });
 
 const mealForm = reactive(createMealDefaults());
+const nutritionForm = reactive({
+  query: '',
+  grams: 150,
+});
+const nutritionSearch = reactive({
+  sourceSummary: '',
+  items: [],
+});
+const nutritionEstimate = reactive(createNutritionEstimateDefaults());
 const workoutForm = reactive(createWorkoutDefaults());
 
 const trendForm = reactive({
@@ -1558,6 +1669,8 @@ const trendForm = reactive({
   calories: 0,
   stressScore: 0,
 });
+
+resetMealForm();
 
 const isAdmin = computed(() => Boolean(authUser.value?.admin));
 
@@ -2097,6 +2210,19 @@ function createMealDefaults() {
   };
 }
 
+function createNutritionEstimateDefaults() {
+  return {
+    matchedName: '',
+    portion: '',
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    confidence: '',
+    note: '',
+  };
+}
+
 function createWorkoutDefaults() {
   return {
     title: '',
@@ -2158,6 +2284,16 @@ function clearNotice() {
 
 function resetMealForm() {
   Object.assign(mealForm, createMealDefaults());
+  mealForm.portion = '150 g';
+  mealForm.calories = 0;
+  mealForm.protein = 0;
+  mealForm.carbs = 0;
+  mealForm.fat = 0;
+  nutritionForm.query = '';
+  nutritionForm.grams = 150;
+  nutritionSearch.sourceSummary = '';
+  nutritionSearch.items = [];
+  Object.assign(nutritionEstimate, createNutritionEstimateDefaults());
 }
 
 function resetWorkoutForm() {
@@ -2295,7 +2431,74 @@ async function saveCheckin() {
   await runDashboardAction('checkin', () => api.post('/api/dashboard/checkin', checkinForm), '今日数据已保存。');
 }
 
+async function searchNutritionFoods() {
+  if (!nutritionForm.query.trim()) {
+    showNotice('请先输入菜品或食材名称。', 'error');
+    return;
+  }
+
+  busy.nutritionSearch = true;
+  try {
+    const response = await api.get(
+      `/api/dashboard/nutrition/search?q=${encodeURIComponent(nutritionForm.query.trim())}&limit=6`
+    );
+    nutritionSearch.sourceSummary = response.sourceSummary || '';
+    nutritionSearch.items = response.items || [];
+    if (!nutritionSearch.items.length) {
+      showNotice('暂未找到匹配食材，请试试更基础的名称。', 'error');
+      return;
+    }
+    showNotice(`已找到 ${nutritionSearch.items.length} 个候选食材。`, 'success');
+  } catch (error) {
+    showNotice(error.message || '食材搜索失败，请稍后重试。', 'error');
+  } finally {
+    busy.nutritionSearch = false;
+  }
+}
+
+function syncMealFormFromEstimate(estimate, preferredName = '') {
+  mealForm.name = preferredName || nutritionForm.query.trim() || estimate.matchedName;
+  mealForm.portion = estimate.portion;
+  mealForm.calories = Math.round(Number(estimate.calories || 0));
+  mealForm.protein = Math.round(Number(estimate.protein || 0));
+  mealForm.carbs = Math.round(Number(estimate.carbs || 0));
+  mealForm.fat = Math.round(Number(estimate.fat || 0));
+}
+
+async function estimateNutrition(queryOverride = '') {
+  const query = (queryOverride || nutritionForm.query).trim();
+  if (!query) {
+    showNotice('请先输入菜品或食材名称。', 'error');
+    return;
+  }
+
+  busy.nutritionEstimate = true;
+  try {
+    const response = await api.post('/api/dashboard/nutrition/estimate', {
+      query,
+      grams: Number(nutritionForm.grams) || 150,
+    });
+    Object.assign(nutritionEstimate, response);
+    syncMealFormFromEstimate(response, query);
+    nutritionSearch.sourceSummary = response.source || nutritionSearch.sourceSummary;
+    nutritionSearch.items = response.relatedFoods || nutritionSearch.items;
+    showNotice(`已根据 ${response.matchedName} 自动填充营养数据。`, 'success');
+  } catch (error) {
+    showNotice(error.message || '营养估算失败，请稍后重试。', 'error');
+  } finally {
+    busy.nutritionEstimate = false;
+  }
+}
+
+function applySuggestion(item) {
+  nutritionForm.query = item.name;
+  estimateNutrition(item.name);
+}
+
 async function saveMeal() {
+  if (!mealForm.name.trim() && nutritionEstimate.matchedName) {
+    mealForm.name = nutritionEstimate.matchedName;
+  }
   await runDashboardAction(
     'meal',
     () => api.post('/api/dashboard/meals', mealForm),
