@@ -16,7 +16,7 @@
         </article>
         <article>
           <strong>管理员后台</strong>
-          <span>管理员可查看用户列表、账号状态，并为演示场景重置用户密码。</span>
+          <span>管理员可查看用户列表、账号状态，并在运维场景下重置用户密码。</span>
         </article>
         <article>
           <strong>账号安全</strong>
@@ -78,7 +78,7 @@
       </form>
 
       <div class="auth-hint">
-        <strong>演示账号</strong>
+        <strong>测试账号</strong>
         <span>账号：admin</span>
         <span>密码：admin123</span>
       </div>
@@ -112,15 +112,18 @@
 
     <main class="workspace" v-if="dashboard && analytics && assistant">
       <header class="workspace-header">
-        <div>
+        <div class="workspace-hero-copy">
           <p class="kicker">健康生活分析</p>
-          <h2>{{ dashboard.recoverySignal.headline }}</h2>
-          <p class="subcopy">把健康记录、趋势分析、账号安全和管理员能力放进同一个工作台里，既适合演示，也更接近真实软件。</p>
+          <h2 class="workspace-headline">
+            <span class="workspace-headline__name">{{ dashboard.profile.name }}，</span>
+            <span>{{ headlineSuffix }}</span>
+          </h2>
+          <p class="subcopy">把健康记录、趋势分析、数据处理、账号安全和智能建议收拢到同一个持续运行的健康工作台里。</p>
         </div>
 
         <div class="profile-chip">
           <div class="avatar">{{ dashboard.profile.name.slice(0, 1) }}</div>
-          <div>
+          <div class="profile-meta">
             <strong>{{ dashboard.profile.name }}</strong>
             <span>{{ authUser.username }}</span>
           </div>
@@ -197,7 +200,7 @@
           </section>
         </div>
 
-        <div class="section-grid section-grid--wide">
+        <div class="section-grid section-grid--wide body-shell">
           <section class="panel">
             <div class="panel-head">
               <div>
@@ -378,8 +381,8 @@
           </section>
         </div>
 
-        <div class="section-grid">
-          <section class="panel">
+        <div class="section-grid section-grid--single">
+          <section v-if="false" class="panel">
             <div class="panel-head">
               <div>
                 <p class="kicker">风险散点</p>
@@ -387,13 +390,17 @@
               </div>
             </div>
             <BaseChart :option="scatterOption" />
+
+            <ul class="narrative-list chart-note-list">
+              <li v-for="item in scatterInsights" :key="item">{{ item }}</li>
+            </ul>
           </section>
 
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">样本概览</p>
-                <h3>建模样本摘要</h3>
+                <p class="kicker">数据资产中心</p>
+                <h3>样本池与来源登记</h3>
               </div>
             </div>
 
@@ -407,18 +414,276 @@
                 <strong>{{ analytics.datasetSummary.highRiskCount }}</strong>
               </article>
               <article class="summary-chip">
-                <span>平均睡眠</span>
-                <strong>{{ analytics.datasetSummary.avgSleepHours }} h</strong>
+                <span>高风险占比</span>
+                <strong>{{ formatPercent(analytics.datasetSummary.highRiskRatio) }}</strong>
               </article>
               <article class="summary-chip">
-                <span>平均步数</span>
-                <strong>{{ analytics.datasetSummary.avgSteps }}</strong>
+                <span>特征数</span>
+                <strong>{{ analytics.datasetSummary.featureCount }}</strong>
+              </article>
+              <article class="summary-chip">
+                <span>训练 / 测试</span>
+                <strong>{{ analytics.datasetSummary.trainCount }} / {{ analytics.datasetSummary.testCount }}</strong>
+              </article>
+              <article class="summary-chip">
+                <span>平均 BMI</span>
+                <strong>{{ analytics.datasetSummary.avgBmi }}</strong>
+              </article>
+            </div>
+
+            <div class="source-grid">
+              <article v-for="source in analytics.datasetSummary.sources" :key="source.name" class="source-card">
+                <div class="source-meta">
+                  <strong>{{ source.name }}</strong>
+                  <span>{{ source.type }} · {{ source.sampleCount }} 条</span>
+                </div>
+                <small>资产路径 {{ source.location }}</small>
+                <p>{{ source.note }}</p>
               </article>
             </div>
 
             <ul class="narrative-list">
               <li v-for="line in analytics.narrative" :key="line">{{ line }}</li>
             </ul>
+
+            <div class="dataset-grid">
+              <article v-for="item in descriptiveStats" :key="item.label" class="summary-chip">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+                <small>{{ item.detail }}</small>
+              </article>
+            </div>
+
+            <ul class="narrative-list chart-note-list">
+              <li v-for="item in correlationInsights" :key="item">{{ item }}</li>
+            </ul>
+          </section>
+        </div>
+
+        <div class="section-grid section-grid--charts">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">个人趋势</p>
+                <h3>最近一周恢复变化</h3>
+              </div>
+            </div>
+
+            <BaseChart :option="trendOption" />
+
+            <ul class="narrative-list chart-note-list">
+              <li v-for="item in trendChartInsights" :key="item">{{ item }}</li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">分层分布</p>
+                <h3>BMI 风险区间</h3>
+              </div>
+            </div>
+
+            <BaseChart :option="bmiBandOption" />
+
+            <ul class="narrative-list chart-note-list">
+              <li v-for="item in bmiInsights" :key="item">{{ item }}</li>
+            </ul>
+          </section>
+        </div>
+
+        <div v-if="false" class="section-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">数据工程</p>
+                <h3>清洗、抽样与标准化</h3>
+              </div>
+            </div>
+
+            <p class="section-note">
+              {{ analytics.preprocessingAudit.tooling.runtime }} · {{ analytics.preprocessingAudit.tooling.library }}
+              {{ analytics.preprocessingAudit.tooling.libraryVersion }} · {{ analytics.preprocessingAudit.tooling.scriptPath }}
+            </p>
+
+            <div class="pipeline-grid">
+              <article v-for="item in processingFlow" :key="item.title" class="pipeline-card">
+                <span>{{ item.stage }}</span>
+                <strong>{{ item.title }}</strong>
+                <p>{{ item.description }}</p>
+              </article>
+            </div>
+
+            <ul class="narrative-list">
+              <li v-for="step in analytics.preprocessing.steps" :key="step">{{ step }}</li>
+            </ul>
+
+            <div class="missing-grid">
+              <article v-for="item in analytics.preprocessing.missingSummary" :key="item.dataset" class="summary-chip">
+                <span>{{ item.dataset }}</span>
+                <strong>{{ item.rowsAfter }} / {{ item.rowsBefore }}</strong>
+                <small>缺失值 {{ item.missingValuesFound }} · 删除样本 {{ item.missingRowsRemoved }}</small>
+              </article>
+            </div>
+
+            <div class="quality-grid">
+              <article class="summary-chip">
+                <span>主样本重复检查</span>
+                <strong>{{ analytics.preprocessingAudit.lifestyle.duplicateRowsFound }}</strong>
+                <small>删除重复 {{ analytics.preprocessingAudit.lifestyle.duplicateRowsRemoved }} 条</small>
+              </article>
+              <article class="summary-chip">
+                <span>主样本范围超界</span>
+                <strong>{{ sumCounts(analytics.preprocessingAudit.lifestyle.rangeChecks, 'invalidCount') }}</strong>
+                <small>依据业务阈值扫描无效字段</small>
+              </article>
+              <article class="summary-chip">
+                <span>临床库缺失值</span>
+                <strong>{{ analytics.preprocessingAudit.benchmark.missingValuesFound }}</strong>
+                <small>删除缺失记录 {{ analytics.preprocessingAudit.benchmark.missingRowsRemoved }} 条</small>
+              </article>
+              <article class="summary-chip">
+                <span>临床库统计异常</span>
+                <strong>{{ sumCounts(analytics.preprocessingAudit.benchmark.outlierChecks, 'outlierCount') }}</strong>
+                <small>保留极端样本并单独标记</small>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">特征工程</p>
+                <h3>主推断引擎关键因素</h3>
+              </div>
+            </div>
+
+            <BaseChart :option="featureImpactOption" />
+
+            <div class="impact-caption" v-if="analytics.featureImportance.length">
+              <strong>{{ analytics.featureImportance[0].label }}</strong>
+              <p>{{ analytics.featureImportance[0].interpretation }}</p>
+            </div>
+
+            <ul class="narrative-list chart-note-list">
+              <li v-for="item in featureInsights" :key="item">{{ item }}</li>
+            </ul>
+          </section>
+        </div>
+
+        <div v-if="false" class="section-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">样本预览</p>
+                <h3>入模记录切片</h3>
+              </div>
+            </div>
+
+            <div class="sample-table-wrap">
+              <table class="sample-table">
+                <thead>
+                  <tr>
+                    <th>样本</th>
+                    <th>睡眠</th>
+                    <th>压力</th>
+                    <th>BMI</th>
+                    <th>步数</th>
+                    <th>饮水</th>
+                    <th>风险</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in samplePreviewRows" :key="row.id">
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.sleepHours }} h</td>
+                    <td>{{ row.stressScore }}</td>
+                    <td>{{ row.bmi }}</td>
+                    <td>{{ row.steps }}</td>
+                    <td>{{ row.waterMl }} ml</td>
+                    <td>
+                      <span class="risk-dot" :class="row.riskLabel === 'HIGH' ? 'risk-dot--high' : 'risk-dot--low'">
+                        {{ row.riskLabel === 'HIGH' ? '高风险' : '低风险' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">字段字典</p>
+                <h3>主样本字段释义</h3>
+              </div>
+            </div>
+
+            <div class="dictionary-table-wrap">
+              <table class="dictionary-table">
+                <thead>
+                  <tr>
+                    <th>字段</th>
+                    <th>类型</th>
+                    <th>单位</th>
+                    <th>含义</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in analytics.preprocessingAudit.lifestyle.fieldDictionary" :key="item.key">
+                    <td>{{ item.label }}</td>
+                    <td>{{ item.dtype }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>{{ item.meaning }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div v-if="false" class="section-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">字段覆盖</p>
+                <h3>临床基准库特征范围</h3>
+              </div>
+            </div>
+
+            <div class="field-tag-grid">
+              <span v-for="label in analytics.benchmark.featureLabels" :key="label" class="field-tag">
+                {{ label }}
+              </span>
+            </div>
+
+            <ul class="narrative-list benchmark-note-list">
+              <li v-for="note in analytics.benchmark.notes" :key="note">{{ note }}</li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">清洗动作</p>
+                <h3>缺失值、异常值与无效字段处理</h3>
+              </div>
+            </div>
+
+            <div class="audit-block">
+              <strong>{{ analytics.preprocessingAudit.lifestyle.dataset }}</strong>
+              <ul class="narrative-list">
+                <li v-for="item in analytics.preprocessingAudit.lifestyle.actions" :key="item">{{ item }}</li>
+              </ul>
+            </div>
+
+            <div class="audit-block">
+              <strong>{{ analytics.preprocessingAudit.benchmark.dataset }}</strong>
+              <ul class="narrative-list">
+                <li v-for="item in analytics.preprocessingAudit.benchmark.actions" :key="item">{{ item }}</li>
+              </ul>
+            </div>
           </section>
         </div>
       </section>
@@ -585,7 +850,7 @@
         </div>
       </section>
 
-      <section v-show="currentSection === 'trend'" class="band">
+      <section v-if="false" class="band">
         <div class="section-grid section-grid--wide">
           <section class="panel">
             <div class="panel-head">
@@ -663,13 +928,18 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">模型对比</p>
-                <h3>模型评估结果</h3>
+                <p class="kicker">推断引擎</p>
+                <h3>模型性能矩阵</h3>
               </div>
             </div>
 
             <div class="model-grid">
-              <article v-for="model in analytics.models" :key="model.model" class="model-card">
+              <article
+                v-for="model in analytics.models"
+                :key="model.model"
+                class="model-card"
+                :class="{ 'model-card--selected': model.model === analytics.selectedModel }"
+              >
                 <strong>{{ model.model }}</strong>
                 <div class="metric-row">
                   <span>准确率</span>
@@ -687,6 +957,10 @@
                   <span>F1 值</span>
                   <b>{{ formatPercent(model.f1) }}</b>
                 </div>
+                <div class="metric-row">
+                  <span>AUC</span>
+                  <b>{{ formatPercent(model.auc) }}</b>
+                </div>
               </article>
             </div>
           </section>
@@ -699,6 +973,241 @@
               </div>
             </div>
             <BaseChart :option="bmiBandOption" />
+          </section>
+        </div>
+
+        <div class="section-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">混淆矩阵</p>
+                <h3>{{ analytics.selectedModel }} 误差结构</h3>
+              </div>
+            </div>
+
+            <div class="confusion-grid">
+              <article v-for="item in analytics.confusionMatrix" :key="item.label" class="confusion-card">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">KNN 调参</p>
+                <h3>K 值与性能变化</h3>
+              </div>
+            </div>
+
+            <BaseChart :option="knnSweepOption" />
+          </section>
+        </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">跨源基准库</p>
+                <h3>{{ analytics.benchmark.name }}</h3>
+                <p class="section-note">{{ analytics.benchmark.source }} · 清洗产物 {{ analytics.benchmark.cleanedPath }}</p>
+              </div>
+            </div>
+
+          <div class="dataset-grid">
+            <article class="summary-chip">
+              <span>原始样本</span>
+              <strong>{{ analytics.benchmark.sampleCount }}</strong>
+            </article>
+            <article class="summary-chip">
+              <span>清洗后样本</span>
+              <strong>{{ analytics.benchmark.usableSampleCount }}</strong>
+            </article>
+            <article class="summary-chip">
+              <span>阳性占比</span>
+              <strong>{{ formatPercent(analytics.benchmark.positiveRate) }}</strong>
+            </article>
+            <article class="summary-chip">
+              <span>公开特征数</span>
+              <strong>{{ analytics.benchmark.featureCount }}</strong>
+            </article>
+          </div>
+
+          <div class="section-grid">
+            <section class="benchmark-shell">
+              <div class="model-grid">
+                <article
+                  v-for="model in analytics.benchmark.models"
+                  :key="model.model"
+                  class="model-card"
+                  :class="{ 'model-card--selected': model.model === analytics.benchmark.selectedModel }"
+                >
+                  <strong>{{ model.model }}</strong>
+                  <div class="metric-row">
+                    <span>准确率</span>
+                    <b>{{ formatPercent(model.accuracy) }}</b>
+                  </div>
+                  <div class="metric-row">
+                    <span>召回率</span>
+                    <b>{{ formatPercent(model.recall) }}</b>
+                  </div>
+                  <div class="metric-row">
+                    <span>F1 值</span>
+                    <b>{{ formatPercent(model.f1) }}</b>
+                  </div>
+                  <div class="metric-row">
+                    <span>AUC</span>
+                    <b>{{ formatPercent(model.auc) }}</b>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="benchmark-shell">
+              <ul class="narrative-list">
+                <li v-for="step in analytics.benchmark.preprocessing" :key="step">{{ step }}</li>
+              </ul>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <section v-show="currentSection === 'trend'" class="band">
+        <div class="section-grid section-grid--wide">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">趋势记录</p>
+                <h3>补录今天的身体状态</h3>
+              </div>
+            </div>
+
+            <form class="editor-grid" @submit.prevent="saveTrend">
+              <label class="form-field">
+                <span>日期</span>
+                <input v-model="trendForm.recordDate" type="date" />
+              </label>
+              <label class="form-field">
+                <span>体重</span>
+                <input v-model.number="trendForm.weight" type="number" min="30" step="0.1" />
+              </label>
+              <label class="form-field">
+                <span>睡眠</span>
+                <input v-model.number="trendForm.sleepHours" type="number" min="0" max="12" step="0.1" />
+              </label>
+              <label class="form-field">
+                <span>步数</span>
+                <input v-model.number="trendForm.steps" type="number" min="0" step="100" />
+              </label>
+              <label class="form-field">
+                <span>热量</span>
+                <input v-model.number="trendForm.calories" type="number" min="0" step="10" />
+              </label>
+              <label class="form-field">
+                <span>压力分</span>
+                <input v-model.number="trendForm.stressScore" type="number" min="0" max="100" step="1" />
+              </label>
+
+              <div class="form-actions form-actions--full">
+                <button class="primary-button" type="submit" :disabled="busy.trend">
+                  <ChartColumnBig :size="16" />
+                  <span>{{ busy.trend ? '保存中...' : '写入趋势数据' }}</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="trend-list">
+              <article v-for="item in latestTrends" :key="item.date" class="trend-item">
+                <strong>{{ item.date }}</strong>
+                <span>{{ item.weight }} kg · {{ item.sleepHours }} h · 压力 {{ item.stressScore }}</span>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">趋势教练</p>
+                <h3>本周调整建议</h3>
+              </div>
+            </div>
+
+            <div class="ai-advice-box">
+              <p>{{ trendAdviceText }}</p>
+              <small v-if="trendAdvice.generatedAt">最近更新 {{ trendAdvice.generatedAt }}</small>
+            </div>
+
+            <button class="primary-button" @click="generateTrendAdvice" :disabled="busy.trendAdvice">
+              <Sparkles :size="16" />
+              <span>{{ busy.trendAdvice ? '分析中...' : '刷新本周建议' }}</span>
+            </button>
+
+            <div class="panel-head panel-head--spaced">
+              <div>
+                <p class="kicker">立即可做</p>
+                <h3>今天优先处理的事</h3>
+              </div>
+            </div>
+
+            <div class="dataset-grid">
+              <article v-for="item in trendPriorityCards" :key="item.label" class="summary-chip">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.current }}</strong>
+                <small>{{ item.detail }}</small>
+                <p class="summary-chip__hint">{{ item.hint }}</p>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <div class="section-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">恢复趋势</p>
+                <h3>最近记录变化</h3>
+              </div>
+            </div>
+            <BaseChart :option="trendOption" />
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">本周摘要</p>
+                <h3>你最近 7 天的节奏</h3>
+              </div>
+            </div>
+
+            <div class="dataset-grid">
+              <article v-for="item in trendWeeklyDigest" :key="item.label" class="summary-chip">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+                <small>{{ item.detail }}</small>
+              </article>
+            </div>
+
+            <ul class="narrative-list">
+              <li v-for="item in trendRiskNotes" :key="item">{{ item }}</li>
+            </ul>
+          </section>
+        </div>
+
+        <div class="section-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="kicker">可执行建议</p>
+                <h3>把建议落实到今天</h3>
+              </div>
+            </div>
+
+            <div class="insight-stack">
+              <article v-for="item in trendActionInsights" :key="item.title" class="insight-card">
+                <strong>{{ item.title }}</strong>
+                <p>{{ item.description }}</p>
+              </article>
+            </div>
           </section>
         </div>
       </section>
@@ -947,7 +1456,7 @@ const baseNavItems = [
   { key: 'body', label: '身体画像', desc: '维护体重、体脂和目标参数', icon: HeartPulse },
   { key: 'nutrition', label: '饮食规划', desc: '记录餐食、营养和饮水', icon: Apple },
   { key: 'workout', label: '训练计划', desc: '安排训练任务并追踪完成情况', icon: Activity },
-  { key: 'trend', label: '趋势追踪', desc: '补录每日趋势并查看模型表现', icon: ChartColumnBig },
+  { key: 'trend', label: '趋势追踪', desc: '补录每日趋势并查看风险变化', icon: ChartColumnBig },
   { key: 'assistant', label: '智能建议', desc: '把数据交给 DeepSeek 帮你判断', icon: BrainCircuit },
   { key: 'account', label: '账号安全', desc: '修改密码并管理当前账号', icon: KeyRound },
 ];
@@ -1054,6 +1563,17 @@ const isAdmin = computed(() => Boolean(authUser.value?.admin));
 
 const navItems = computed(() => (isAdmin.value ? [...baseNavItems, adminNavItem] : baseNavItems));
 
+const headlineSuffix = computed(() => {
+  if (!dashboard.value) return '';
+  const profileName = dashboard.value.profile.name || '';
+  const headline = dashboard.value.recoverySignal.headline || '';
+  const prefix = `${profileName}，`;
+  if (headline.startsWith(prefix)) {
+    return headline.slice(prefix.length);
+  }
+  return headline;
+});
+
 const calorieBalance = computed(() => {
   if (!dashboard.value) return 0;
   return dashboard.value.summary.calorieTarget - dashboard.value.summary.calories;
@@ -1072,6 +1592,302 @@ const calorieBalanceHint = computed(() => {
 });
 
 const latestTrends = computed(() => (dashboard.value?.trends || []).slice(-5).reverse());
+
+const recentTrendWindow = computed(() => (dashboard.value?.trends || []).slice(-7));
+
+const trendAdviceText = computed(() => {
+  const advice = trendAdvice.advice?.trim();
+  if (!advice) {
+    return '还没有生成建议。补录今天的数据后，可以让系统结合近 7 天节奏给出更具体的调整方向。';
+  }
+  if (/Permission denied|getsockopt|请求失败|错误信息|暂时不可用/i.test(advice)) {
+    return '智能建议暂时未返回结果。你可以先按照下面的优先事项调整，稍后再重新生成。';
+  }
+  return advice;
+});
+
+const trendPriorityCards = computed(() => {
+  if (!dashboard.value) return [];
+
+  const summary = dashboard.value.summary;
+  const sleepGap = Math.max(0, 8 - summary.sleepHours);
+  const stepGap = Math.max(0, summary.stepTarget - summary.steps);
+  const waterGap = Math.max(0, summary.waterTarget - summary.water);
+  const workoutGap = Math.max(0, summary.workoutTarget - summary.workoutMinutes);
+
+  return [
+    {
+      label: '睡眠',
+      current: `${summary.sleepHours.toFixed(1)} h`,
+      detail: sleepGap > 0 ? `距离 8 h 恢复线还差 ${sleepGap.toFixed(1)} h` : '已达到恢复睡眠时长',
+      hint: sleepGap > 0 ? '今晚尽量提前入睡，先补睡眠再追训练强度。' : '保持当前作息，避免熬夜反弹。',
+    },
+    {
+      label: '步数',
+      current: `${summary.steps}`,
+      detail: stepGap > 0 ? `距离今日目标还差 ${stepGap} 步` : '今天的活动量已经达标',
+      hint: stepGap > 0 ? '优先补一段 15 到 20 分钟快走，比临时高强度更稳。' : '可以用轻松散步收尾，帮助恢复。',
+    },
+    {
+      label: '饮水',
+      current: `${summary.water} ml`,
+      detail: waterGap > 0 ? `距离今日目标还差 ${waterGap} ml` : '今日饮水已达标',
+      hint: waterGap > 0 ? '把剩余水量分成 2 到 3 次喝完，不要集中猛灌。' : '继续少量多次补水，维持状态。',
+    },
+    {
+      label: '活动时长',
+      current: `${summary.workoutMinutes} min`,
+      detail: workoutGap > 0 ? `距离今日目标还差 ${workoutGap} min` : '今天的训练时长已经够了',
+      hint: workoutGap > 0 ? '如果精神一般，先补低强度活动，不必硬撑大强度。' : '晚上以拉伸或放松为主，避免过度训练。',
+    },
+  ];
+});
+
+const trendWeeklyDigest = computed(() => {
+  const trends = recentTrendWindow.value;
+  if (!trends.length) return [];
+
+  const first = trends[0];
+  const last = trends[trends.length - 1];
+  const avgSleep = trends.reduce((sum, item) => sum + item.sleepHours, 0) / trends.length;
+  const avgSteps = Math.round(trends.reduce((sum, item) => sum + item.steps, 0) / trends.length);
+  const avgStress = Math.round(trends.reduce((sum, item) => sum + item.stressScore, 0) / trends.length);
+  const weightDelta = last.weight - first.weight;
+  const stressDelta = last.stressScore - first.stressScore;
+
+  return [
+    {
+      label: '体重变化',
+      value: `${weightDelta > 0 ? '+' : ''}${weightDelta.toFixed(1)} kg`,
+      detail: `从 ${first.weight} kg 到 ${last.weight} kg`,
+    },
+    {
+      label: '平均睡眠',
+      value: `${avgSleep.toFixed(1)} h`,
+      detail: avgSleep >= 7.5 ? '恢复节奏比较稳定' : '睡眠仍偏少，值得优先修复',
+    },
+    {
+      label: '平均步数',
+      value: `${avgSteps}`,
+      detail: `最近 ${trends.length} 天的日均活动量`,
+    },
+    {
+      label: '压力变化',
+      value: `${stressDelta > 0 ? '+' : ''}${stressDelta}`,
+      detail: `最近平均压力 ${avgStress} 分`,
+    },
+  ];
+});
+
+const trendRiskNotes = computed(() => {
+  if (!dashboard.value) return [];
+
+  const summary = dashboard.value.summary;
+  const notes = [];
+
+  if (summary.sleepHours < 7) {
+    notes.push(`睡眠只有 ${summary.sleepHours.toFixed(1)} 小时，恢复不足会直接影响食欲、训练质量和第二天压力感。`);
+  }
+  if (summary.stressScore >= 70) {
+    notes.push(`压力分达到 ${summary.stressScore}，今天更适合降强度、早点结束刺激性活动。`);
+  }
+  if (summary.steps < summary.stepTarget * 0.6) {
+    notes.push(`当前步数只完成了约 ${Math.round((summary.steps / summary.stepTarget) * 100)}%，建议补一次轻快步行。`);
+  }
+  if (summary.water < summary.waterTarget * 0.7) {
+    notes.push(`饮水量还偏低，补足水分通常比额外喝咖啡更能改善疲劳感。`);
+  }
+
+  if (!notes.length) {
+    notes.push('最近状态总体平稳，接下来重点是保持规律作息，不要因为状态好就突然加量。');
+  }
+
+  return notes;
+});
+
+const trendActionInsights = computed(() => {
+  if (!dashboard.value) return [];
+
+  const summary = dashboard.value.summary;
+  const actions = [];
+
+  actions.push(
+    {
+      title: '把晚上节奏收下来',
+      description:
+        summary.sleepHours < 7
+          ? '今晚尽量把睡前 1 小时留给洗漱、拉伸和放松，先把睡眠补回来。'
+          : '今晚继续维持当前作息，把稳定节奏当作第一目标。',
+    },
+    {
+      title: '给身体补一次轻活动',
+      description:
+        summary.steps < summary.stepTarget
+          ? '饭后加一段 15 到 20 分钟步行，通常就能明显缩小今天的活动差距。'
+          : '今天活动量已经不错，后半天以放松活动和拉伸收尾更合适。',
+    },
+    {
+      title: '把水分分段补齐',
+      description:
+        summary.water < summary.waterTarget
+          ? '把剩余水量拆成几次喝完，搭配正常进餐，避免临睡前一次性补太多。'
+          : '饮水已经达标，继续少量多次维持就够了。',
+    },
+  );
+
+  return actions;
+});
+
+const processingFlow = computed(() => {
+  if (!analytics.value) return [];
+
+  const sources = analytics.value.datasetSummary?.sources || [];
+  const missingSummary = analytics.value.preprocessing?.missingSummary || [];
+  const benchmark = analytics.value.benchmark;
+
+  return [
+    {
+      stage: 'Stage 01',
+      title: '数据接入',
+      description: `整合 ${sources.length} 路数据资产，当前覆盖 ${analytics.value.datasetSummary.sampleCount} 条行为样本与 ${benchmark?.sampleCount || 0} 条外部基准记录。`,
+    },
+    {
+      stage: 'Stage 02',
+      title: '质量筛查',
+      description: `缺失值扫描共覆盖 ${missingSummary.length} 个数据集，外部基准库最终保留 ${benchmark?.usableSampleCount || 0} 条可用记录。`,
+    },
+    {
+      stage: 'Stage 03',
+      title: '特征对齐',
+      description: `统一整理 ${analytics.value.datasetSummary.featureCount} 个主特征，并保持训练集 ${analytics.value.datasetSummary.trainCount} / 测试集 ${analytics.value.datasetSummary.testCount} 的分层抽样结构。`,
+    },
+    {
+      stage: 'Stage 04',
+      title: '推断输出',
+      description: `主推断引擎当前选择 ${analytics.value.selectedModel}，并同步产出混淆矩阵、AUC 与特征影响强度。`,
+    },
+  ];
+});
+
+const samplePreviewRows = computed(() => {
+  if (!analytics.value?.scatterPoints?.length) return [];
+  return analytics.value.scatterPoints.slice(0, 8).map((row) => ({
+    id: row.id,
+    sleepHours: row.sleepHours,
+    stressScore: row.stressScore,
+    bmi: row.bmi,
+    steps: row.steps,
+    waterMl: row.waterMl,
+    riskLabel: row.riskLabel,
+  }));
+});
+
+const descriptiveStats = computed(() => {
+  if (!analytics.value?.scatterPoints?.length) return [];
+
+  const rows = analytics.value.scatterPoints;
+  const sleepValues = rows.map((item) => item.sleepHours);
+  const stressValues = rows.map((item) => item.stressScore);
+  const stepValues = rows.map((item) => item.steps);
+  const waterValues = rows.map((item) => item.waterMl);
+
+  return [
+    {
+      label: '平均睡眠',
+      value: `${analytics.value.datasetSummary.avgSleepHours.toFixed(1)} h`,
+      detail: `样本范围 ${formatNumber(Math.min(...sleepValues), 1)} 到 ${formatNumber(Math.max(...sleepValues), 1)} h`,
+    },
+    {
+      label: '平均压力',
+      value: `${formatNumber(analytics.value.datasetSummary.avgStressScore, 1)} 分`,
+      detail: `样本范围 ${Math.min(...stressValues)} 到 ${Math.max(...stressValues)} 分`,
+    },
+    {
+      label: '平均步数',
+      value: `${analytics.value.datasetSummary.avgSteps}`,
+      detail: `样本范围 ${Math.min(...stepValues)} 到 ${Math.max(...stepValues)} 步`,
+    },
+    {
+      label: '平均饮水',
+      value: `${Math.round(waterValues.reduce((sum, value) => sum + value, 0) / waterValues.length)} ml`,
+      detail: `样本范围 ${Math.min(...waterValues)} 到 ${Math.max(...waterValues)} ml`,
+    },
+  ];
+});
+
+const correlationInsights = computed(() => {
+  if (!analytics.value?.scatterPoints?.length) return [];
+
+  const rows = analytics.value.scatterPoints;
+  const sleepValues = rows.map((item) => item.sleepHours);
+  const stressValues = rows.map((item) => item.stressScore);
+  const stepValues = rows.map((item) => item.steps);
+  const bmiValues = rows.map((item) => item.bmi);
+  const highRiskRows = rows.filter((item) => item.riskLabel === 'HIGH');
+  const lowRiskRows = rows.filter((item) => item.riskLabel !== 'HIGH');
+
+  const sleepStressCorr = correlation(sleepValues, stressValues);
+  const stepsBmiCorr = correlation(stepValues, bmiValues);
+  const highRiskSleep = average(highRiskRows.map((item) => item.sleepHours));
+  const lowRiskSleep = average(lowRiskRows.map((item) => item.sleepHours));
+
+  return [
+    `睡眠与压力的相关系数为 ${formatNumber(sleepStressCorr, 2)}，说明睡眠越少的样本通常压力越高。`,
+    `步数与 BMI 的相关系数为 ${formatNumber(stepsBmiCorr, 2)}，反映活动量更高的样本 BMI 往往更稳定。`,
+    `高风险样本平均睡眠 ${formatNumber(highRiskSleep, 1)} 小时，低风险样本为 ${formatNumber(lowRiskSleep, 1)} 小时，二者存在明显差距。`,
+  ];
+});
+
+const scatterInsights = computed(() => {
+  if (!analytics.value?.scatterPoints?.length) return [];
+
+  const rows = analytics.value.scatterPoints;
+  const highStressLowSleep = rows.filter((item) => item.sleepHours < 6.5 && item.stressScore >= 65).length;
+  const lowStressEnoughSleep = rows.filter((item) => item.sleepHours >= 7.5 && item.stressScore < 50).length;
+
+  return [
+    `散点图横轴为睡眠时长、纵轴为压力评分，点越靠左上代表“睡得少但压力高”的风险组合。`,
+    `当前样本中有 ${highStressLowSleep} 条记录集中在高压低睡眠区域，而处于“睡眠充足且压力较低”区域的记录有 ${lowStressEnoughSleep} 条。`,
+  ];
+});
+
+const featureInsights = computed(() => {
+  if (!analytics.value?.featureImportance?.length) return [];
+
+  const topFeatures = analytics.value.featureImportance.slice(0, 3);
+  return [
+    `特征重要性图展示的是各变量对风险判断的影响强度，横轴数值越大，说明该指标越值得重点关注。`,
+    `当前影响最大的前三项分别是 ${topFeatures.map((item) => item.label).join('、')}，和生活方式干预最直接相关。`,
+  ];
+});
+
+const trendChartInsights = computed(() => {
+  if (!dashboard.value?.trends?.length) return [];
+
+  const trends = dashboard.value.trends;
+  const first = trends[0];
+  const last = trends[trends.length - 1];
+  const sleepDelta = last.sleepHours - first.sleepHours;
+  const stressDelta = last.stressScore - first.stressScore;
+
+  return [
+    `这张图同时展示体重、睡眠和压力的变化，可以观察恢复状态是否在同步改善。`,
+    `最近记录中，睡眠变化 ${sleepDelta >= 0 ? '+' : ''}${formatNumber(sleepDelta, 1)} 小时，压力变化 ${stressDelta >= 0 ? '+' : ''}${stressDelta} 分。`,
+  ];
+});
+
+const bmiInsights = computed(() => {
+  if (!analytics.value?.bmiBands?.length) return [];
+
+  const bands = analytics.value.bmiBands;
+  const highest = [...bands].sort((left, right) => right.highRiskRate - left.highRiskRate)[0];
+  const lowest = [...bands].sort((left, right) => left.highRiskRate - right.highRiskRate)[0];
+
+  return [
+    `横轴是 BMI 区间，纵轴是该区间内的高风险占比，用来观察不同体型层级的风险差异。`,
+    `当前高风险占比最高的是 ${highest.label} 区间，最低的是 ${lowest.label} 区间，说明风险并不是平均分布的。`,
+  ];
+});
 
 const trendOption = computed(() => ({
   backgroundColor: 'transparent',
@@ -1190,6 +2006,83 @@ const bmiBandOption = computed(() => ({
   ],
 }));
 
+const featureImpactOption = computed(() => ({
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: { type: 'shadow' },
+    formatter: (params) => {
+      const item = params[0];
+      return `${item.name}<br/>权重强度 ${item.value}`;
+    },
+  },
+  grid: { left: 80, right: 20, top: 20, bottom: 20, containLabel: true },
+  xAxis: {
+    type: 'value',
+    name: '影响强度',
+    axisLabel: { color: '#69766f' },
+    splitLine: { lineStyle: { color: '#ece7d8' } },
+  },
+  yAxis: {
+    type: 'category',
+    data: (analytics.value?.featureImportance || []).map((item) => item.label).reverse(),
+    axisLabel: { color: '#69766f' },
+    axisLine: { lineStyle: { color: '#d8d6ca' } },
+  },
+  series: [
+    {
+      type: 'bar',
+      data: (analytics.value?.featureImportance || [])
+        .map((item) => ({
+          value: item.weight,
+          itemStyle: {
+            color: item.direction === 'risk_up' ? '#c57a55' : '#4f8f73',
+            borderRadius: [0, 12, 12, 0],
+          },
+        }))
+        .reverse(),
+      barWidth: 18,
+    },
+  ],
+}));
+
+const knnSweepOption = computed(() => ({
+  tooltip: { trigger: 'axis' },
+  legend: { textStyle: { color: '#52615a' }, top: 0 },
+  grid: { left: 24, right: 18, top: 42, bottom: 24, containLabel: true },
+  xAxis: {
+    type: 'category',
+    data: (analytics.value?.knnSweep || []).map((item) => `k=${item.k}`),
+    axisLabel: { color: '#69766f' },
+    axisLine: { lineStyle: { color: '#d8d6ca' } },
+  },
+  yAxis: {
+    type: 'value',
+    axisLabel: {
+      color: '#69766f',
+      formatter: (value) => `${Math.round(value * 100)}%`,
+    },
+    splitLine: { lineStyle: { color: '#ece7d8' } },
+  },
+  series: [
+    {
+      name: 'Accuracy',
+      type: 'line',
+      smooth: true,
+      data: (analytics.value?.knnSweep || []).map((item) => item.accuracy),
+      lineStyle: { color: '#27465a', width: 3 },
+      itemStyle: { color: '#27465a' },
+    },
+    {
+      name: 'F1',
+      type: 'line',
+      smooth: true,
+      data: (analytics.value?.knnSweep || []).map((item) => item.f1),
+      lineStyle: { color: '#6ea88c', width: 3 },
+      itemStyle: { color: '#6ea88c' },
+    },
+  ],
+}));
+
 function createMealDefaults() {
   return {
     name: '',
@@ -1216,6 +2109,42 @@ function createWorkoutDefaults() {
 
 function formatPercent(value) {
   return `${(value * 100).toFixed(2)}%`;
+}
+
+function formatNumber(value, digits = 1) {
+  return Number(value || 0).toFixed(digits);
+}
+
+function average(values) {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + Number(value || 0), 0) / values.length;
+}
+
+function correlation(left, right) {
+  if (!left.length || left.length !== right.length) return 0;
+
+  const meanLeft = average(left);
+  const meanRight = average(right);
+
+  let numerator = 0;
+  let leftVariance = 0;
+  let rightVariance = 0;
+
+  for (let index = 0; index < left.length; index += 1) {
+    const leftDelta = left[index] - meanLeft;
+    const rightDelta = right[index] - meanRight;
+    numerator += leftDelta * rightDelta;
+    leftVariance += leftDelta * leftDelta;
+    rightVariance += rightDelta * rightDelta;
+  }
+
+  const denominator = Math.sqrt(leftVariance * rightVariance);
+  if (!denominator) return 0;
+  return numerator / denominator;
+}
+
+function sumCounts(items, key) {
+  return (items || []).reduce((sum, item) => sum + Number(item[key] || 0), 0);
 }
 
 function showNotice(text, type = 'success') {

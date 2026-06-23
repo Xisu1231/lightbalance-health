@@ -16,6 +16,7 @@ public class DeepSeekProperties {
     private String reasoningEffort = "high";
     private int timeoutSeconds = 45;
     private int maxHistoryMessages = 12;
+    private int retryAttempts = 3;
 
     public boolean isEnabled() {
         return enabled;
@@ -87,5 +88,13 @@ public class DeepSeekProperties {
 
     public void setMaxHistoryMessages(int maxHistoryMessages) {
         this.maxHistoryMessages = maxHistoryMessages;
+    }
+
+    public int getRetryAttempts() {
+        return retryAttempts;
+    }
+
+    public void setRetryAttempts(int retryAttempts) {
+        this.retryAttempts = retryAttempts;
     }
 }

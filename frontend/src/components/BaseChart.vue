@@ -4,7 +4,7 @@
 
 <script setup>
 import * as echarts from 'echarts';
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   option: {
@@ -16,6 +16,24 @@ const props = defineProps({
 const chartRef = ref(null);
 let chartInstance;
 let observer;
+let resizeTimer;
+
+function scheduleResize(attempt = 0) {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!chartRef.value || !chartInstance) {
+      return;
+    }
+
+    const { clientWidth, clientHeight } = chartRef.value;
+    if ((clientWidth < 80 || clientHeight < 80) && attempt < 6) {
+      scheduleResize(attempt + 1);
+      return;
+    }
+
+    chartInstance.resize();
+  }, attempt === 0 ? 16 : 120);
+}
 
 function render() {
   if (!chartRef.value) {
@@ -25,26 +43,32 @@ function render() {
     chartInstance = echarts.init(chartRef.value);
   }
   chartInstance.setOption(props.option, true);
+  scheduleResize();
 }
 
 onMounted(() => {
   render();
   observer = new ResizeObserver(() => {
-    chartInstance?.resize();
+    scheduleResize();
   });
   observer.observe(chartRef.value);
+  window.addEventListener('resize', scheduleResize);
 });
 
 watch(
   () => props.option,
   () => {
-    render();
+    nextTick(() => {
+      render();
+    });
   },
   { deep: true },
 );
 
 onBeforeUnmount(() => {
+  clearTimeout(resizeTimer);
   observer?.disconnect();
+  window.removeEventListener('resize', scheduleResize);
   chartInstance?.dispose();
 });
 </script>

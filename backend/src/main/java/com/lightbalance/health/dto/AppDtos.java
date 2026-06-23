@@ -171,23 +171,127 @@ public final class AppDtos {
     }
 
     public record AnalyticsResponse(
+        ProjectSummary project,
         DatasetSummary datasetSummary,
+        PreprocessingSummary preprocessing,
+        PreprocessingAudit preprocessingAudit,
         List<ModelMetric> models,
         String selectedModel,
         List<BmiBand> bmiBands,
         List<ScatterPoint> scatterPoints,
         List<ConfusionCell> confusionMatrix,
-        List<String> narrative
+        List<FeatureImpact> featureImportance,
+        List<KnnSweepPoint> knnSweep,
+        BenchmarkSummary benchmark,
+        List<String> narrative,
+        List<String> reportBullets
+    ) {
+    }
+
+    public record PreprocessingAudit(
+        ToolingInfo tooling,
+        DatasetAudit lifestyle,
+        DatasetAudit benchmark
+    ) {
+    }
+
+    public record ToolingInfo(
+        String scriptPath,
+        String runtime,
+        String library,
+        String libraryVersion
+    ) {
+    }
+
+    public record DatasetAudit(
+        String dataset,
+        String path,
+        int rows,
+        int columns,
+        String labelColumn,
+        java.util.Map<String, Integer> labelDistribution,
+        int missingValuesFound,
+        int missingRowsRemoved,
+        int duplicateRowsFound,
+        int duplicateRowsRemoved,
+        int invalidRowsFound,
+        int invalidRowsRemoved,
+        List<FieldDictionaryItem> fieldDictionary,
+        List<RangeCheckItem> rangeChecks,
+        List<OutlierCheckItem> outlierChecks,
+        List<String> actions,
+        List<String> notes
+    ) {
+    }
+
+    public record FieldDictionaryItem(
+        String key,
+        String label,
+        String dtype,
+        String unit,
+        String meaning
+    ) {
+    }
+
+    public record RangeCheckItem(
+        String field,
+        String validRange,
+        int invalidCount,
+        String action
+    ) {
+    }
+
+    public record OutlierCheckItem(
+        String field,
+        int outlierCount,
+        String method,
+        String action
+    ) {
+    }
+
+    public record ProjectSummary(
+        String title,
+        String subtitle,
+        String taskType
     ) {
     }
 
     public record DatasetSummary(
         int sampleCount,
         int highRiskCount,
+        double highRiskRatio,
         double avgSleepHours,
         int avgSteps,
         double avgBmi,
-        double avgStressScore
+        double avgStressScore,
+        int featureCount,
+        int trainCount,
+        int testCount,
+        List<DataSourceCard> sources
+    ) {
+    }
+
+    public record DataSourceCard(
+        String name,
+        String type,
+        String location,
+        int sampleCount,
+        String note
+    ) {
+    }
+
+    public record PreprocessingSummary(
+        List<String> steps,
+        List<MissingValueCard> missingSummary
+    ) {
+    }
+
+    public record MissingValueCard(
+        String dataset,
+        int rowsBefore,
+        int rowsAfter,
+        int missingValuesFound,
+        int missingRowsRemoved
     ) {
     }
 
@@ -196,7 +300,8 @@ public final class AppDtos {
         double accuracy,
         double precision,
         double recall,
-        double f1
+        double f1,
+        double auc
     ) {
     }
 
@@ -221,6 +326,42 @@ public final class AppDtos {
     public record ConfusionCell(
         String label,
         int value
+    ) {
+    }
+
+    public record FeatureImpact(
+        String key,
+        String label,
+        double weight,
+        double signedWeight,
+        String direction,
+        String interpretation
+    ) {
+    }
+
+    public record KnnSweepPoint(
+        int k,
+        double accuracy,
+        double f1
+    ) {
+    }
+
+    public record BenchmarkSummary(
+        String name,
+        String source,
+        String citation,
+        String rawPath,
+        String cleanedPath,
+        int sampleCount,
+        int usableSampleCount,
+        int featureCount,
+        double positiveRate,
+        List<String> preprocessing,
+        MissingValueCard missingSummary,
+        List<ModelMetric> models,
+        String selectedModel,
+        List<String> notes,
+        List<String> featureLabels
     ) {
     }
 

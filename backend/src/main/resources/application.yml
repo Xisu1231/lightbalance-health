@@ -34,3 +34,4 @@ deepseek:
   reasoning-effort: ${DEEPSEEK_REASONING_EFFORT:high}
   timeout-seconds: ${DEEPSEEK_TIMEOUT_SECONDS:45}
   max-history-messages: ${DEEPSEEK_MAX_HISTORY_MESSAGES:12}
+  retry-attempts: ${DEEPSEEK_RETRY_ATTEMPTS:3}

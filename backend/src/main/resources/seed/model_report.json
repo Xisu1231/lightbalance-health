@@ -1,838 +1,320 @@
 {
+  "project": {
+    "title": "基于生活方式数据的健康风险分析与智能建议系统",
+    "subtitle": "生活方式行为样本与外部临床基准库协同驱动的双数据链路",
+    "taskType": "binary_classification"
+  },
   "dataset": {
-    "sample_count": 320,
-    "high_risk_count": 90,
-    "avg_sleep_hours": 6.72,
-    "avg_steps": 9564,
-    "avg_bmi": 24.22,
-    "avg_stress_score": 55.05
+    "sample_count": 420,
+    "high_risk_count": 161,
+    "high_risk_ratio": 0.3833,
+    "avg_sleep_hours": 6.73,
+    "avg_steps": 8637,
+    "avg_bmi": 24.73,
+    "avg_stress_score": 57.59,
+    "feature_count": 13,
+    "train_count": 335,
+    "test_count": 85,
+    "sources": [
+      {
+        "name": "Lifestyle Behavior Stream",
+        "type": "系统行为样本",
+        "location": "data/lifestyle_risk_dataset.csv",
+        "sampleCount": 420,
+        "note": "由睡眠、步数、饮水、压力、BMI、腰围和作息习惯等字段合成，作为平台的本地行为样本池。"
+      },
+      {
+        "name": "Cleveland Clinical Registry",
+        "type": "外部临床基准",
+        "location": "data/external/processed.cleveland.data",
+        "sampleCount": 303,
+        "note": "来自 UCI 的心血管特征库，用于校验同一处理链在临床特征场景下的稳定性。"
+      }
+    ]
+  },
+  "preprocessing": {
+    "steps": [
+      "先检查字段完整性与标签分布，保证问题定义、输入特征和输出标签一一对应。",
+      "采用分层 8:2 训练/测试划分，避免高风险与低风险样本比例在测试集中过度偏移。",
+      "对逻辑回归与 KNN 使用数值标准化，减少量纲差异对距离与权重学习的干扰。",
+      "同时保留 Accuracy、Precision、Recall、F1 与 AUC，避免只看单一指标造成误判。"
+    ],
+    "missingSummary": [
+      {
+        "dataset": "模拟生活方式数据",
+        "rowsBefore": 420,
+        "rowsAfter": 420,
+        "missingValuesFound": 0,
+        "missingRowsRemoved": 0
+      },
+      {
+        "dataset": "UCI Cleveland Heart Disease",
+        "rowsBefore": 303,
+        "rowsAfter": 297,
+        "missingValuesFound": 6,
+        "missingRowsRemoved": 6
+      }
+    ]
   },
   "models": [
     {
       "model": "Logistic Regression",
-      "accuracy": 0.9531,
-      "precision": 0.95,
-      "recall": 0.9048,
-      "f1": 0.9268,
+      "accuracy": 0.9412,
+      "precision": 0.8889,
+      "recall": 0.9697,
+      "f1": 0.9275,
+      "auc": 0.9913,
       "confusionMatrix": {
-        "tp": 19,
-        "fp": 1,
-        "tn": 42,
-        "fn": 2
-      },
-      "predictions": [
-        {
-          "id": "S261",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2162
-        },
-        {
-          "id": "S101",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0993
-        },
-        {
-          "id": "S239",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0538
-        },
-        {
-          "id": "S032",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8471
-        },
-        {
-          "id": "S199",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9607
-        },
-        {
-          "id": "S151",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S054",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S006",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1503
-        },
-        {
-          "id": "S272",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S222",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.5314
-        },
-        {
-          "id": "S177",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S220",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.3071
-        },
-        {
-          "id": "S183",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.911
-        },
-        {
-          "id": "S110",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.916
-        },
-        {
-          "id": "S075",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0075
-        },
-        {
-          "id": "S003",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9998
-        },
-        {
-          "id": "S040",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8283
-        },
-        {
-          "id": "S103",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0004
-        },
-        {
-          "id": "S119",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S215",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2936
-        },
-        {
-          "id": "S204",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0067
-        },
-        {
-          "id": "S034",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.3496
-        },
-        {
-          "id": "S218",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S182",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9922
-        },
-        {
-          "id": "S320",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9081
-        },
-        {
-          "id": "S066",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S116",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1582
-        },
-        {
-          "id": "S168",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8054
-        },
-        {
-          "id": "S212",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0001
-        },
-        {
-          "id": "S120",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0017
-        },
-        {
-          "id": "S098",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0002
-        },
-        {
-          "id": "S225",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9387
-        },
-        {
-          "id": "S007",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.001
-        },
-        {
-          "id": "S095",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0393
-        },
-        {
-          "id": "S200",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0002
-        },
-        {
-          "id": "S162",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.7324
-        },
-        {
-          "id": "S049",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0152
-        },
-        {
-          "id": "S105",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2878
-        },
-        {
-          "id": "S005",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9988
-        },
-        {
-          "id": "S310",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S318",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0002
-        },
-        {
-          "id": "S250",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9949
-        },
-        {
-          "id": "S202",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0021
-        },
-        {
-          "id": "S277",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.9547
-        },
-        {
-          "id": "S022",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0161
-        },
-        {
-          "id": "S055",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.059
-        },
-        {
-          "id": "S051",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S063",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8402
-        },
-        {
-          "id": "S030",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0198
-        },
-        {
-          "id": "S258",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 1
-        },
-        {
-          "id": "S265",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0033
-        },
-        {
-          "id": "S229",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.4166
-        },
-        {
-          "id": "S271",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1566
-        },
-        {
-          "id": "S074",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1391
-        },
-        {
-          "id": "S180",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S302",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.004
-        },
-        {
-          "id": "S002",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0002
-        },
-        {
-          "id": "S306",
-          "actual": "LOW",
-          "predicted": "HIGH",
-          "probability": 0.9115
-        },
-        {
-          "id": "S270",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.5069
-        },
-        {
-          "id": "S071",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.3404
-        },
-        {
-          "id": "S289",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8563
-        },
-        {
-          "id": "S298",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S297",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0708
-        },
-        {
-          "id": "S134",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.0015
-        }
-      ]
+        "tp": 32,
+        "fp": 4,
+        "tn": 48,
+        "fn": 1
+      }
     },
     {
       "model": "KNN (k=7)",
-      "accuracy": 0.7344,
-      "precision": 0.75,
-      "recall": 0.2857,
-      "f1": 0.4138,
+      "accuracy": 0.7647,
+      "precision": 0.76,
+      "recall": 0.5758,
+      "f1": 0.6552,
+      "auc": 0.8549,
       "confusionMatrix": {
-        "tp": 6,
-        "fp": 2,
-        "tn": 41,
-        "fn": 15
-      },
-      "predictions": [
-        {
-          "id": "S261",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S101",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S239",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S032",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.7143
-        },
-        {
-          "id": "S199",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.4286
-        },
-        {
-          "id": "S151",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S054",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S006",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S272",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S222",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S177",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S220",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.4286
-        },
-        {
-          "id": "S183",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S110",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S075",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S003",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8571
-        },
-        {
-          "id": "S040",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S103",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S119",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S215",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S204",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S034",
-          "actual": "LOW",
-          "predicted": "HIGH",
-          "probability": 0.7143
-        },
-        {
-          "id": "S218",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S182",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.7143
-        },
-        {
-          "id": "S320",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S066",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S116",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S168",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S212",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S120",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S098",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S225",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.4286
-        },
-        {
-          "id": "S007",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S095",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.4286
-        },
-        {
-          "id": "S200",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S162",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S049",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S105",
-          "actual": "LOW",
-          "predicted": "HIGH",
-          "probability": 0.5714
-        },
-        {
-          "id": "S005",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.4286
-        },
-        {
-          "id": "S310",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S318",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S250",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8571
-        },
-        {
-          "id": "S202",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S277",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.4286
-        },
-        {
-          "id": "S022",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S055",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S051",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S063",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.4286
-        },
-        {
-          "id": "S030",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S258",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.8571
-        },
-        {
-          "id": "S265",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S229",
-          "actual": "HIGH",
-          "predicted": "HIGH",
-          "probability": 0.5714
-        },
-        {
-          "id": "S271",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S074",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S180",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S302",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S002",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S306",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        },
-        {
-          "id": "S270",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S071",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S289",
-          "actual": "HIGH",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S298",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0
-        },
-        {
-          "id": "S297",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.2857
-        },
-        {
-          "id": "S134",
-          "actual": "LOW",
-          "predicted": "LOW",
-          "probability": 0.1429
-        }
-      ]
+        "tp": 19,
+        "fp": 6,
+        "tn": 46,
+        "fn": 14
+      }
+    },
+    {
+      "model": "Gaussian Naive Bayes",
+      "accuracy": 0.8588,
+      "precision": 0.8387,
+      "recall": 0.7879,
+      "f1": 0.8125,
+      "auc": 0.9301,
+      "confusionMatrix": {
+        "tp": 26,
+        "fp": 5,
+        "tn": 47,
+        "fn": 7
+      }
     }
   ],
   "selectedModel": "Logistic Regression",
   "bmiBands": [
     {
       "label": "BMI<20",
-      "highRiskRate": 16.33,
-      "count": 49
+      "highRiskRate": 32.39,
+      "count": 71
     },
     {
       "label": "20-24",
-      "highRiskRate": 22.61,
-      "count": 115
+      "highRiskRate": 33.86,
+      "count": 127
     },
     {
       "label": "24-28",
-      "highRiskRate": 34,
-      "count": 100
+      "highRiskRate": 39.62,
+      "count": 106
     },
     {
       "label": "BMI>=28",
-      "highRiskRate": 39.29,
-      "count": 56
+      "highRiskRate": 45.69,
+      "count": 116
     }
   ],
+  "featureImportance": [
+    {
+      "key": "exercise_minutes",
+      "label": "运动时长",
+      "weight": 2.9567,
+      "signedWeight": -2.9567,
+      "direction": "risk_down",
+      "interpretation": "规律运动会压低模型给出的高风险概率。"
+    },
+    {
+      "key": "stress_score",
+      "label": "压力评分",
+      "weight": 2.5324,
+      "signedWeight": 2.5324,
+      "direction": "risk_up",
+      "interpretation": "压力评分越高，高风险判断越常出现。"
+    },
+    {
+      "key": "steps",
+      "label": "日步数",
+      "weight": 2.5054,
+      "signedWeight": -2.5054,
+      "direction": "risk_down",
+      "interpretation": "步数更高通常对应更低的生活方式风险。"
+    },
+    {
+      "key": "waist_cm",
+      "label": "腰围",
+      "weight": 2.4651,
+      "signedWeight": 2.4651,
+      "direction": "risk_up",
+      "interpretation": "腰围升高是高风险样本的重要信号。"
+    },
+    {
+      "key": "water_ml",
+      "label": "饮水量",
+      "weight": 2.2676,
+      "signedWeight": -2.2676,
+      "direction": "risk_down",
+      "interpretation": "饮水不足与较高风险标签呈同向关系。"
+    },
+    {
+      "key": "screen_hours",
+      "label": "屏幕时长",
+      "weight": 1.9501,
+      "signedWeight": 1.9501,
+      "direction": "risk_up",
+      "interpretation": "久坐和长时间屏幕暴露会推高风险概率。"
+    },
+    {
+      "key": "resting_heart_rate",
+      "label": "静息心率",
+      "weight": 1.9073,
+      "signedWeight": 1.9073,
+      "direction": "risk_up",
+      "interpretation": "静息心率偏高会增加模型的风险评分。"
+    },
+    {
+      "key": "bmi",
+      "label": "BMI",
+      "weight": 1.2559,
+      "signedWeight": 1.2559,
+      "direction": "risk_up",
+      "interpretation": "BMI 偏高时，高风险概率会明显上升。"
+    }
+  ],
+  "knnSweep": [
+    {
+      "k": 3,
+      "accuracy": 0.7765,
+      "f1": 0.7077
+    },
+    {
+      "k": 5,
+      "accuracy": 0.8,
+      "f1": 0.7213
+    },
+    {
+      "k": 7,
+      "accuracy": 0.7647,
+      "f1": 0.6552
+    },
+    {
+      "k": 9,
+      "accuracy": 0.7529,
+      "f1": 0.6182
+    },
+    {
+      "k": 11,
+      "accuracy": 0.7176,
+      "f1": 0.5862
+    }
+  ],
+  "benchmark": {
+    "name": "UCI Cleveland Heart Disease",
+    "source": "UCI Machine Learning Repository",
+    "citation": "https://archive.ics.uci.edu/dataset/45/heart+disease",
+    "rawPath": "data/external/processed.cleveland.data",
+    "cleanedPath": "data/heart_disease_cleveland_cleaned.csv",
+    "sample_count": 303,
+    "usable_sample_count": 297,
+    "feature_count": 13,
+    "positive_rate": 0.4613,
+    "preprocessing": [
+      "将原始文件中的 ? 识别为缺失值，并剔除含缺失字段的记录。",
+      "把 num>0 统一映射为阳性标签，转换为平台可直接消费的二分类结构。",
+      "保持 13 个原始临床字段作为输入特征，不额外注入标签泄露字段。",
+      "采用与本地行为样本一致的抽样、标准化与评估规则，便于统一比较。"
+    ],
+    "missingSummary": {
+      "dataset": "UCI Cleveland Heart Disease",
+      "rowsBefore": 303,
+      "rowsAfter": 297,
+      "missingValuesFound": 6,
+      "missingRowsRemoved": 6
+    },
+    "models": [
+      {
+        "model": "Logistic Regression",
+        "accuracy": 0.9167,
+        "precision": 0.96,
+        "recall": 0.8571,
+        "f1": 0.9057,
+        "auc": 0.9576,
+        "confusionMatrix": {
+          "tp": 24,
+          "fp": 1,
+          "tn": 31,
+          "fn": 4
+        }
+      },
+      {
+        "model": "KNN (k=9)",
+        "accuracy": 0.8667,
+        "precision": 0.8846,
+        "recall": 0.8214,
+        "f1": 0.8519,
+        "auc": 0.9509,
+        "confusionMatrix": {
+          "tp": 23,
+          "fp": 3,
+          "tn": 29,
+          "fn": 5
+        }
+      },
+      {
+        "model": "Gaussian Naive Bayes",
+        "accuracy": 0.9167,
+        "precision": 0.9259,
+        "recall": 0.8929,
+        "f1": 0.9091,
+        "auc": 0.9475,
+        "confusionMatrix": {
+          "tp": 25,
+          "fp": 2,
+          "tn": 30,
+          "fn": 3
+        }
+      }
+    ],
+    "selectedModel": "Gaussian Naive Bayes",
+    "notes": [
+      "临床基准库中的阳性占比为 46.13%，与本地样本池形成不同分布结构。",
+      "Gaussian Naive Bayes 在这组临床特征上的 F1 为 90.91%，说明当前推断链具备跨源稳定性。",
+      "年龄、血压、胆固醇、最大心率等字段可以作为平台外部基准库的标准化输入。 "
+    ],
+    "featureLabels": [
+      "年龄",
+      "性别",
+      "胸痛类型",
+      "静息血压",
+      "胆固醇",
+      "空腹血糖是否偏高",
+      "静息心电图结果",
+      "最大心率",
+      "运动诱发心绞痛",
+      "运动后 ST 压低",
+      "ST 斜率",
+      "主要血管数",
+      "地中海贫血检查结果"
+    ]
+  },
   "narrative": [
-    "睡眠不足、步数偏低、压力偏高与高风险标签呈显著同向关系。",
-    "逻辑回归在模拟健康数据上表现更稳定，便于解释各项特征如何影响风险概率。",
-    "KNN 对局部样本模式较敏感，但在高压力与高 BMI 交叉区域更容易受邻居分布波动影响。"
+    "当前行为样本池中高风险记录占比 38.33%，风险识别需要同时关注召回率与误报率平衡。",
+    "逻辑回归在当前生活方式数据上的 F1 为 92.75%，是现阶段最稳定的主推断引擎。",
+    "特征权重显示“运动时长、压力评分、日步数”是最关键的风险驱动因素。",
+    "临床基准库当前表现最好的模型为 Gaussian Naive Bayes，可作为跨源参考引擎。"
+  ],
+  "reportBullets": [
+    "本地行为样本池与外部临床基准库共用一套特征处理与评估流程。",
+    "系统同时保留 Accuracy、Precision、Recall、F1、AUC 与混淆矩阵，避免单指标误判。",
+    "KNN 调参与特征权重解释可以直接反映模型边界与关键驱动项。",
+    "清洗、标准化、抽样、建模、可视化与建议生成已经形成闭环。"
   ]
 }

@@ -66,9 +66,9 @@ public class AssistantService {
         } else {
             conversation.add(new AppDtos.AssistantMessage(
                 "assistant",
-                "DeepSeek",
-                "调用异常",
-                "这次 DeepSeek 没有成功返回结果，请检查 API Key、网络或模型配置。错误信息：" + result.errorMessage(),
+                "LightBalance",
+                "本地建议",
+                buildFallbackReply(user, userMessage, result.errorMessage()),
                 now()
             ));
         }
@@ -87,10 +87,79 @@ public class AssistantService {
             advice = result.content();
         } else if (!result.configured()) {
             advice = "当前还没有配置 DeepSeek API Key。先优先保证睡眠规律、白天分次补水，并在高压力日把训练强度降一级。";
+            return new AppDtos.TrendAdviceResponse(advice, runtime(), now());
         } else {
-            advice = "DeepSeek 这次没有成功返回结果。先把睡眠守在 7 小时以上，压力高的日子降低高强度训练，并把补水分散到全天。错误信息：" + result.errorMessage();
+            advice = buildFallbackTrendAdvice(user, result.errorMessage());
+            return new AppDtos.TrendAdviceResponse(
+                advice,
+                new AppDtos.AssistantRuntime(
+                    "LightBalance",
+                    "local-fallback",
+                    false,
+                    "智能建议服务暂时不可用，当前已切换到本地建议模式"
+                ),
+                now()
+            );
         }
         return new AppDtos.TrendAdviceResponse(advice, runtime(), now());
+    }
+
+    private String buildFallbackReply(UserProfile user, String userMessage, String errorMessage) {
+        AppDtos.DashboardResponse dashboard = dashboardService.getDashboard(user);
+        StringBuilder builder = new StringBuilder("智能建议服务暂时不可用，已切换为本地分析。");
+
+        if (dashboard.summary().sleepHours() < 7) {
+            builder.append(" 今天优先把睡眠补到 7 小时以上。");
+        }
+        if (dashboard.summary().water() < dashboard.summary().waterTarget() * 0.8) {
+            builder.append(" 饮水还没达标，建议分 2 到 3 次补足剩余水量。");
+        }
+        if (dashboard.summary().stressScore() >= 70) {
+            builder.append(" 压力偏高，训练以低到中等强度为主。");
+        } else if (dashboard.summary().steps() < dashboard.summary().stepTarget() * 0.8) {
+            builder.append(" 步数偏低，晚些时候补一段 20 分钟快走更合适。");
+        }
+        if (userMessage != null && !userMessage.isBlank()) {
+            builder.append(" 你刚才关注的是“").append(userMessage.trim()).append("”，建议先从今天最容易执行的一项开始。");
+        }
+        if (isNetworkEnvironmentIssue(errorMessage)) {
+            builder.append(" 当前环境未能连接外部智能服务，但本地功能不受影响。");
+        }
+        return builder.toString().trim();
+    }
+
+    private String buildFallbackTrendAdvice(UserProfile user, String errorMessage) {
+        AppDtos.DashboardResponse dashboard = dashboardService.getDashboard(user);
+        StringBuilder builder = new StringBuilder("智能建议服务暂时不可用，已按本地趋势规则生成建议。");
+
+        if (dashboard.summary().sleepHours() < 7) {
+            builder.append(" 接下来 24 小时先稳住睡眠时长。");
+        }
+        if (dashboard.summary().stressScore() >= 70) {
+            builder.append(" 压力高的日子把高强度训练降一级。");
+        }
+        if (dashboard.summary().water() < dashboard.summary().waterTarget()) {
+            builder.append(" 补水分散到全天完成，不要集中一次喝完。");
+        }
+        if (dashboard.summary().steps() < dashboard.summary().stepTarget()) {
+            builder.append(" 步数未达标，补一段轻快走更稳妥。");
+        }
+        if (isNetworkEnvironmentIssue(errorMessage)) {
+            builder.append(" 外部模型暂时不可达，但趋势页其余分析正常可用。");
+        }
+        return builder.toString().trim();
+    }
+
+    private boolean isNetworkEnvironmentIssue(String errorMessage) {
+        if (errorMessage == null || errorMessage.isBlank()) {
+            return false;
+        }
+        String normalized = errorMessage.toLowerCase();
+        return normalized.contains("getsockopt")
+            || normalized.contains("permission denied")
+            || normalized.contains("connectexception")
+            || normalized.contains("unknownhost")
+            || normalized.contains("timed out");
     }
 
     private CopyOnWriteArrayList<AppDtos.AssistantMessage> conversationFor(UserProfile user) {
@@ -168,13 +237,9 @@ public class AssistantService {
         }
 
         return """
-你是 LightBalance 应用内的 DeepSeek 健康教练。
-请只依据提示中提供的数据，用简体中文回答。
-请给出当天就能执行的饮食、训练、补水、恢复和睡眠建议。
-不要给出医学诊断、用药建议或夸大判断。
-如果用户提到疾病、药物或紧急症状，请明确建议联系医生。
-语气温和、结论明确，通常控制在 3 到 6 句。
-
+你是 LightBalance 应用内的 DeepSeek 健康教练。请只依据提示中提供的数据，用简体中文回答。
+请给出当天就能执行的饮食、训练、补水、恢复和睡眠建议。不要给出医学诊断、用药建议或夸大判断。
+如果用户提到疾病、药物或紧急症状，请明确建议联系医生。语气温和、结论明确，通常控制在 3 到 6 句。
 当前用户信息：
 - 当前时间：%s
 - 姓名：%s
@@ -249,9 +314,8 @@ public class AssistantService {
 要求：
 1. 判断体重、睡眠和压力的变化趋势。
 2. 给出接下来 24 小时最重要的 3 个行动建议。
-3. 不要给出医疗结论。
+3. 不要给出医学结论。
 4. 尽量控制在 120 个汉字以内。
-
 最近趋势：
 %s
 """.formatted(trendLines);

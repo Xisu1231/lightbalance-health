@@ -37,53 +37,101 @@ public class DeepSeekClient {
             return DeepSeekResult.unavailable("未检测到 DeepSeek API Key，请先配置 DEEPSEEK_API_KEY。");
         }
 
-        try {
-            DeepSeekRequest requestBody = new DeepSeekRequest(
-                properties.getModel(),
-                messages,
-                new ThinkingConfig(properties.isThinkingEnabled() ? "enabled" : "disabled", properties.getReasoningEffort()),
-                properties.getMaxTokens()
-            );
+        int attempts = Math.max(1, properties.getRetryAttempts());
+        String lastError = "未知错误";
 
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(properties.getBaseUrl() + "/chat/completions"))
-                .timeout(Duration.ofSeconds(properties.getTimeoutSeconds()))
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + properties.getApiKey())
-                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody)))
-                .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
-                return DeepSeekResult.error("DeepSeek 接口返回异常（HTTP " + response.statusCode() + "）："
-                    + abbreviate(response.body(), 220));
+        for (int attempt = 1; attempt <= attempts; attempt++) {
+            try {
+                DeepSeekResult result = executeChatCompletion(messages);
+                if (result.success()) {
+                    return result;
+                }
+                if (attempt < attempts && isRetryableStatusError(result.errorMessage())) {
+                    sleepBeforeRetry(attempt);
+                    continue;
+                }
+                return result;
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return DeepSeekResult.error("DeepSeek 请求被中断：" + ex.getMessage());
+            } catch (IOException ex) {
+                lastError = ex.getMessage();
+                if (attempt < attempts) {
+                    try {
+                        sleepBeforeRetry(attempt);
+                        continue;
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                        return DeepSeekResult.error("DeepSeek 请求被中断：" + interrupted.getMessage());
+                    }
+                }
+                return DeepSeekResult.error("DeepSeek 请求失败：" + ex.getMessage());
             }
-
-            DeepSeekResponse parsed = objectMapper.readValue(response.body(), DeepSeekResponse.class);
-            if (parsed.choices() == null || parsed.choices().isEmpty() || parsed.choices().get(0).message() == null) {
-                return DeepSeekResult.error("DeepSeek 返回内容为空。");
-            }
-
-            String content = parsed.choices().get(0).message().content();
-            if (!StringUtils.hasText(content)) {
-                return DeepSeekResult.error("DeepSeek 返回了空白回答。");
-            }
-
-            return DeepSeekResult.success(content.trim(), properties.getModel());
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            return DeepSeekResult.error("DeepSeek 请求被中断：" + ex.getMessage());
-        } catch (IOException ex) {
-            return DeepSeekResult.error("DeepSeek 请求失败：" + ex.getMessage());
         }
+
+        return DeepSeekResult.error("DeepSeek 请求失败：" + lastError);
     }
 
     public DeepSeekRuntime runtime() {
         boolean ready = properties.isEnabled() && StringUtils.hasText(properties.getApiKey());
         String status = ready
-            ? "DeepSeek 已连接"
+            ? "DeepSeek 已配置，可在网络可用时启用智能建议"
             : "DeepSeek 未配置，请填写 DEEPSEEK_API_KEY 后重新部署。";
         return new DeepSeekRuntime("DeepSeek", properties.getModel(), ready, status);
+    }
+
+    private DeepSeekResult executeChatCompletion(List<DeepSeekMessage> messages) throws IOException, InterruptedException {
+        DeepSeekRequest requestBody = new DeepSeekRequest(
+            properties.getModel(),
+            messages,
+            new ThinkingConfig(properties.isThinkingEnabled() ? "enabled" : "disabled", properties.getReasoningEffort()),
+            properties.getMaxTokens()
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(properties.getBaseUrl() + "/chat/completions"))
+            .timeout(Duration.ofSeconds(properties.getTimeoutSeconds()))
+            .header("Content-Type", "application/json")
+            .header("Authorization", "Bearer " + properties.getApiKey())
+            .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody)))
+            .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            return DeepSeekResult.error(
+                "DeepSeek 接口返回异常（HTTP " + response.statusCode() + "）：" + abbreviate(response.body(), 220)
+            );
+        }
+
+        DeepSeekResponse parsed = objectMapper.readValue(response.body(), DeepSeekResponse.class);
+        if (parsed.choices() == null || parsed.choices().isEmpty() || parsed.choices().get(0).message() == null) {
+            return DeepSeekResult.error("DeepSeek 返回内容为空。");
+        }
+
+        String content = parsed.choices().get(0).message().content();
+        if (!StringUtils.hasText(content)) {
+            return DeepSeekResult.error("DeepSeek 返回了空白回答。");
+        }
+
+        return DeepSeekResult.success(content.trim(), properties.getModel());
+    }
+
+    private boolean isRetryableStatusError(String errorMessage) {
+        if (!StringUtils.hasText(errorMessage)) {
+            return false;
+        }
+        return errorMessage.contains("HTTP 408")
+            || errorMessage.contains("HTTP 409")
+            || errorMessage.contains("HTTP 429")
+            || errorMessage.contains("HTTP 500")
+            || errorMessage.contains("HTTP 502")
+            || errorMessage.contains("HTTP 503")
+            || errorMessage.contains("HTTP 504");
+    }
+
+    private void sleepBeforeRetry(int attempt) throws InterruptedException {
+        long delayMillis = Math.min(2000L, 400L * attempt);
+        Thread.sleep(delayMillis);
     }
 
     private String abbreviate(String text, int maxLength) {

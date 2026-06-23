@@ -19,6 +19,7 @@ public class ResourceDataLoader {
 
     private SeedData.AppSeed appSeed;
     private SeedData.ModelReport modelReport;
+    private SeedData.PreprocessingAuditSeed preprocessingAudit;
     private List<SeedData.DatasetRow> datasetRows = List.of();
 
     public ResourceDataLoader(ObjectMapper objectMapper) {
@@ -35,6 +36,10 @@ public class ResourceDataLoader {
             new ClassPathResource("seed/model_report.json").getInputStream(),
             SeedData.ModelReport.class
         );
+        this.preprocessingAudit = objectMapper.readValue(
+            new ClassPathResource("seed/preprocessing_audit.json").getInputStream(),
+            SeedData.PreprocessingAuditSeed.class
+        );
         this.datasetRows = loadDatasetRows();
     }
 
@@ -44,6 +49,10 @@ public class ResourceDataLoader {
 
     public SeedData.ModelReport getModelReport() {
         return modelReport;
+    }
+
+    public SeedData.PreprocessingAuditSeed getPreprocessingAudit() {
+        return preprocessingAudit;
     }
 
     public List<SeedData.DatasetRow> getDatasetRows() {
