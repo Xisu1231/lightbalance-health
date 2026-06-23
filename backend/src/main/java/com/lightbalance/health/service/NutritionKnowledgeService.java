@@ -21,7 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class NutritionKnowledgeService {
 
-    private static final String SOURCE_SUMMARY = "内置营养库参考 USDA FoodData Central 公开营养标准整理，适合日常食材快速估算。";
+    private static final String SOURCE_SUMMARY = "内置营养库参考 USDA FoodData Central 公开营养标准整理，并补充常见家常菜估算。";
 
     private final ObjectMapper objectMapper;
     private List<FoodReference> foods = List.of();
@@ -52,11 +52,12 @@ public class NutritionKnowledgeService {
             .limit(Math.max(1, limit))
             .toList();
 
-        List<AppDtos.NutritionFoodOption> items = matches.stream()
-            .map(item -> toOption(item.food()))
-            .toList();
-
-        return new AppDtos.NutritionSearchResponse(query, items.size(), SOURCE_SUMMARY, items);
+        return new AppDtos.NutritionSearchResponse(
+            query,
+            matches.size(),
+            SOURCE_SUMMARY,
+            matches.stream().map(item -> toOption(item.food())).toList()
+        );
     }
 
     public AppDtos.NutritionEstimateResponse estimate(String query, int grams) {
@@ -69,17 +70,22 @@ public class NutritionKnowledgeService {
             .map(food -> new ScoredFood(food, score(food, normalized)))
             .filter(item -> item.score() > 0)
             .sorted(Comparator.comparingInt(ScoredFood::score).reversed().thenComparing(item -> item.food().name()))
-            .limit(4)
+            .limit(6)
             .toList();
 
         if (matches.isEmpty()) {
             throw new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
-                "暂未找到匹配食材，请尝试更具体的名称，例如“西兰花”“菠菜”“番茄”"
+                "暂未找到匹配食材，请尝试更具体的名称，例如“西兰花”“西红柿炒鸡蛋”“香菇豆腐”"
             );
         }
 
         int safeGrams = Math.max(50, grams <= 0 ? 150 : grams);
+        FoodReference exactDish = findExactDish(normalized);
+        if (exactDish != null) {
+            return buildEstimate(query, safeGrams, exactDish, "高", true, matches);
+        }
+
         List<ScoredFood> blendFoods = matches.stream()
             .filter(item -> item.score() >= 110)
             .limit(2)
@@ -94,7 +100,7 @@ public class NutritionKnowledgeService {
             return new AppDtos.NutritionEstimateResponse(
                 query,
                 primary.name() + " + " + secondary.name(),
-                "组合菜品估算",
+                "组合菜",
                 safeGrams,
                 safeGrams + " g",
                 roundInt(primary.caloriesPer100g() * primaryFactor + secondary.caloriesPer100g() * secondaryFactor),
@@ -104,29 +110,40 @@ public class NutritionKnowledgeService {
                 round1(primary.fiberPer100g() * primaryFactor + secondary.fiberPer100g() * secondaryFactor),
                 "中高",
                 primary.source(),
-                "识别到组合菜名，已按主要食材 60% 与次要食材 40% 做快速估算；如烹饪时额外用油较多，建议手动上调脂肪与热量。",
-                matches.stream().map(ScoredFood::food).map(this::toOption).toList()
+                "识别到组合菜名，已按主要食材 60% 与次要食材 40% 做快速估算；如实际用油较多，建议手动上调脂肪与热量。",
+                matches.stream().map(item -> toOption(item.food())).toList()
             );
         }
 
-        FoodReference best = matches.get(0).food();
-        double factor = safeGrams / 100.0;
+        return buildEstimate(query, safeGrams, matches.get(0).food(), matches.get(0).score() >= 110 ? "高" : "中", false, matches);
+    }
 
+    private AppDtos.NutritionEstimateResponse buildEstimate(
+        String query,
+        int safeGrams,
+        FoodReference food,
+        String confidence,
+        boolean dishMode,
+        List<ScoredFood> matches
+    ) {
+        double factor = safeGrams / 100.0;
         return new AppDtos.NutritionEstimateResponse(
             query,
-            best.name(),
-            best.category(),
+            food.name(),
+            food.category(),
             safeGrams,
             safeGrams + " g",
-            roundInt(best.caloriesPer100g() * factor),
-            round1(best.proteinPer100g() * factor),
-            round1(best.carbsPer100g() * factor),
-            round1(best.fatPer100g() * factor),
-            round1(best.fiberPer100g() * factor),
-            matches.get(0).score() >= 110 ? "高" : "中",
-            best.source(),
-            "按每 100 g 公开营养数据线性换算，适合基础食材和家常菜的快速记录；复杂烹饪可再手动微调。",
-            matches.stream().map(ScoredFood::food).map(this::toOption).toList()
+            roundInt(food.caloriesPer100g() * factor),
+            round1(food.proteinPer100g() * factor),
+            round1(food.carbsPer100g() * factor),
+            round1(food.fatPer100g() * factor),
+            round1(food.fiberPer100g() * factor),
+            confidence,
+            food.source(),
+            dishMode
+                ? "已命中内置家常菜营养参考，可直接用于记录；如实际用油偏多，可手动上调热量与脂肪。"
+                : "按每 100 g 公开营养数据线性换算，适合基础食材和家常菜的快速记录；复杂烹饪可再手动微调。",
+            matches.stream().map(item -> toOption(item.food())).toList()
         );
     }
 
@@ -152,19 +169,28 @@ public class NutritionKnowledgeService {
                 continue;
             }
             if (normalizedCandidate.equals(query)) {
-                best = Math.max(best, 140);
+                best = Math.max(best, 160);
                 continue;
             }
             if (query.contains(normalizedCandidate)) {
-                best = Math.max(best, 110 + Math.min(20, normalizedCandidate.length()));
+                best = Math.max(best, 118 + Math.min(24, normalizedCandidate.length()));
                 continue;
             }
             if (normalizedCandidate.contains(query)) {
-                best = Math.max(best, 92 + Math.min(16, query.length()));
+                best = Math.max(best, 92 + Math.min(18, query.length()));
                 continue;
             }
             if (shareToken(query, normalizedCandidate)) {
                 best = Math.max(best, 65);
+            }
+        }
+
+        if ("家常菜".equals(food.category()) || "组合菜".equals(food.category())) {
+            int componentHits = countComponentHits(food, query);
+            if (componentHits >= 2) {
+                best = Math.max(best, 132 + componentHits);
+            } else if (componentHits == 1) {
+                best = Math.max(best, 82);
             }
         }
         return best;
@@ -194,11 +220,12 @@ public class NutritionKnowledgeService {
         if (!StringUtils.hasText(value)) {
             return "";
         }
-        String normalized = value.toLowerCase(Locale.ROOT)
+        return value.toLowerCase(Locale.ROOT)
             .replaceAll("[()（）/、,，·.]", "")
             .replaceAll("\\s+", "")
-            .replaceAll("清炒|凉拌|蒜蓉|炖|煮|烤|焯|沙拉|汤|盖饭|炒饭|米饭|套餐|便当", "");
-        return normalized.trim();
+            .replaceAll("清炒|凉拌|蒜蓉|炖|煮|烤|焯|沙拉|汤|盖饭|炒饭|米饭|套餐|便当|炒|煎|炸|焖|烩|烫", "")
+            .replaceAll("鸡蛋啊|鸡蛋呀|呀|啊", "")
+            .trim();
     }
 
     private String normalizeAlias(String value) {
@@ -211,6 +238,25 @@ public class NutritionKnowledgeService {
 
     private double round1(double value) {
         return Math.round(value * 10.0) / 10.0;
+    }
+
+    private FoodReference findExactDish(String normalizedQuery) {
+        return foods.stream()
+            .filter(food -> "家常菜".equals(food.category()) || "组合菜".equals(food.category()))
+            .filter(food -> buildAliases(food).stream().map(this::normalizeAlias).anyMatch(normalizedQuery::equals))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private int countComponentHits(FoodReference food, String query) {
+        int hits = 0;
+        for (String alias : buildAliases(food)) {
+            String normalizedAlias = normalizeAlias(alias);
+            if (normalizedAlias.length() >= 2 && query.contains(normalizedAlias)) {
+                hits += 1;
+            }
+        }
+        return hits;
     }
 
     private record ScoredFood(FoodReference food, int score) {

@@ -79,20 +79,16 @@ public class DashboardController {
 
     @GetMapping("/nutrition/search")
     public AppDtos.NutritionSearchResponse searchFoods(
-        HttpServletRequest servletRequest,
         @RequestParam String q,
         @RequestParam(defaultValue = "6") int limit
     ) {
-        authService.requireCurrentUser(servletRequest);
         return nutritionKnowledgeService.search(q, limit);
     }
 
     @PostMapping("/nutrition/estimate")
     public AppDtos.NutritionEstimateResponse estimateNutrition(
-        HttpServletRequest servletRequest,
         @Valid @RequestBody AppDtos.NutritionEstimateRequest request
     ) {
-        authService.requireCurrentUser(servletRequest);
         return nutritionKnowledgeService.estimate(request.query(), request.grams());
     }
 
