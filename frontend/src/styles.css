@@ -815,6 +815,53 @@ button:disabled {
   gap: 14px;
 }
 
+.summary-strip--three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.panel--subtle {
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(39, 70, 90, 0.08);
+}
+
+.panel--embedded {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(39, 70, 90, 0.08);
+}
+
+.sample-workspace {
+  margin-top: 16px;
+}
+
+.plan-table-wrap {
+  overflow-x: auto;
+}
+
+.plan-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.plan-table th,
+.plan-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  color: #31423c;
+  vertical-align: top;
+}
+
+.plan-table th {
+  color: #64726c;
+  font-size: 13px;
+}
+
 .nutrition-builder {
   display: flex;
   flex-direction: column;
@@ -1452,6 +1499,7 @@ button:disabled {
   .pipeline-grid,
   .model-grid,
   .confusion-grid,
+  .summary-strip--three,
   .meal-grid,
   .editor-grid,
   .water-inline,

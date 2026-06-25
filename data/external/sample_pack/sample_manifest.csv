@@ -1,0 +1,7 @@
+file_name,theme,rows_hint,core_fields,source_url
+pima_indians_diabetes.csv,glucose_diabetes,768,"pregnancies,glucose,blood_pressure,bmi,age,outcome",https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv
+diabetes_multivariate.csv,diabetes_screening,520,"age,gender,fatigue,obesity,diabetic_class",https://vincentarelbundock.github.io/Rdatasets/csv/MLDataR/diabetes_data.csv
+intersalt_blood_pressure.csv,blood_pressure,52,"blood_pressure,sodium,country",https://vincentarelbundock.github.io/Rdatasets/csv/DAAG/intersalt.csv
+heart_disease_patients.csv,cardiovascular,303,"age,sex,bp,cholesterol,blood_sugar,maximum_hr,heart_disease",https://vincentarelbundock.github.io/Rdatasets/csv/CardioDataSets/heartdisease_tbl_df.csv
+bodyfat_athletes.csv,body_fat,102,"skinfold,bodyfat",https://vincentarelbundock.github.io/Rdatasets/csv/ipsRdbs/bodyfat.csv
+sleep75_behavior.csv,sleep_behavior,706,"sleep,totwrk,leis1,age,gdhlth",https://vincentarelbundock.github.io/Rdatasets/csv/wooldridge/sleep75.csv
