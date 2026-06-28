@@ -593,30 +593,30 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">个人趋势</p>
-                <h3>最近一周恢复变化</h3>
+                <p class="kicker">评分拆解</p>
+                <h3>当前健康分由哪些因素构成</h3>
               </div>
             </div>
 
-            <BaseChart :option="trendOption" />
+            <BaseChart :option="healthScoreContributionOption" />
 
             <ul class="narrative-list chart-note-list">
-              <li v-for="item in trendChartInsights" :key="item">{{ item }}</li>
+              <li v-for="item in healthScoreContributionInsights" :key="item">{{ item }}</li>
             </ul>
           </section>
 
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="kicker">分层分布</p>
-                <h3>BMI 风险区间</h3>
+                <p class="kicker">多维画像</p>
+                <h3>生活方式达标画像</h3>
               </div>
             </div>
 
-            <BaseChart :option="bmiBandOption" />
+            <BaseChart :option="lifestyleRadarOption" />
 
             <ul class="narrative-list chart-note-list">
-              <li v-for="item in bmiInsights" :key="item">{{ item }}</li>
+              <li v-for="item in lifestyleRadarInsights" :key="item">{{ item }}</li>
             </ul>
           </section>
         </div>
@@ -2567,6 +2567,252 @@ const planNarrative = computed(() => [
   `后续你每天记录饮食和训练时，可以把实际变化和这条预测曲线对比，形成“预测 - 干预 - 回看”的闭环。`,
 ]);
 
+const healthScoreBreakdown = computed(() => {
+  if (!dashboard.value) return [];
+
+  const { profile, summary } = dashboard.value;
+  const stressRecoveryScore = 100 - clampNumber(summary.stressScore, 0, 100);
+
+  return [
+    {
+      label: 'BMI 稳定度',
+      raw: bmiHealthScore(profile.bmi),
+      contribution: bmiHealthScore(profile.bmi) * 0.22,
+      weight: '22%',
+      color: '#27465a',
+      detail: `当前 BMI ${formatNumber(profile.bmi, 1)}`,
+    },
+    {
+      label: '睡眠恢复',
+      raw: clampNumber(summary.sleepScore, 0, 100),
+      contribution: clampNumber(summary.sleepScore, 0, 100) * 0.2,
+      weight: '20%',
+      color: '#5f9478',
+      detail: `睡眠 ${formatNumber(summary.sleepHours, 1)} h`,
+    },
+    {
+      label: '饮水完成',
+      raw: ratioToHundred(summary.water, summary.waterTarget),
+      contribution: ratioToHundred(summary.water, summary.waterTarget) * 0.14,
+      weight: '14%',
+      color: '#7ca8bf',
+      detail: `${summary.water}/${summary.waterTarget} ml`,
+    },
+    {
+      label: '步数活跃',
+      raw: ratioToHundred(summary.steps, summary.stepTarget),
+      contribution: ratioToHundred(summary.steps, summary.stepTarget) * 0.14,
+      weight: '14%',
+      color: '#d9bc61',
+      detail: `${summary.steps}/${summary.stepTarget} 步`,
+    },
+    {
+      label: '训练执行',
+      raw: ratioToHundred(summary.workoutMinutes, summary.workoutTarget),
+      contribution: ratioToHundred(summary.workoutMinutes, summary.workoutTarget) * 0.12,
+      weight: '12%',
+      color: '#c57a55',
+      detail: `${summary.workoutMinutes}/${summary.workoutTarget} min`,
+    },
+    {
+      label: '情绪状态',
+      raw: clampNumber(summary.moodScore, 0, 100),
+      contribution: clampNumber(summary.moodScore, 0, 100) * 0.1,
+      weight: '10%',
+      color: '#9b8bc1',
+      detail: `情绪分 ${summary.moodScore}`,
+    },
+    {
+      label: '压力恢复',
+      raw: stressRecoveryScore,
+      contribution: stressRecoveryScore * 0.08,
+      weight: '8%',
+      color: '#7a9d5f',
+      detail: `压力分 ${summary.stressScore}`,
+    },
+  ].map((item) => ({
+    ...item,
+    raw: Number(item.raw.toFixed(1)),
+    contribution: Number(item.contribution.toFixed(1)),
+  }));
+});
+
+const healthScoreContributionOption = computed(() => ({
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: { type: 'shadow' },
+    formatter: (params) => {
+      const item = healthScoreBreakdown.value[params[0]?.dataIndex];
+      if (!item) return '';
+      return `${item.label}<br/>贡献 ${formatNumber(item.contribution, 1)} 分<br/>原始得分 ${formatNumber(item.raw, 1)} / 100<br/>权重 ${item.weight}<br/>${item.detail}`;
+    },
+  },
+  grid: { left: 92, right: 24, top: 20, bottom: 24, containLabel: true },
+  xAxis: {
+    type: 'value',
+    name: '贡献分',
+    min: 0,
+    max: 24,
+    axisLabel: { color: '#69766f' },
+    splitLine: { lineStyle: { color: '#ece7d8' } },
+  },
+  yAxis: {
+    type: 'category',
+    data: healthScoreBreakdown.value.map((item) => item.label).reverse(),
+    axisLabel: { color: '#69766f' },
+    axisLine: { lineStyle: { color: '#d8d6ca' } },
+  },
+  series: [
+    {
+      type: 'bar',
+      barWidth: 18,
+      data: [...healthScoreBreakdown.value]
+        .reverse()
+        .map((item) => ({
+          value: item.contribution,
+          itemStyle: {
+            color: item.color,
+            borderRadius: [0, 10, 10, 0],
+          },
+        })),
+      label: {
+        show: true,
+        position: 'right',
+        color: '#42524b',
+        formatter: ({ value }) => `${formatNumber(value, 1)} 分`,
+      },
+    },
+  ],
+}));
+
+const healthScoreContributionInsights = computed(() => {
+  if (!dashboard.value || !healthScoreBreakdown.value.length) return [];
+
+  const strongest = [...healthScoreBreakdown.value].sort((left, right) => right.contribution - left.contribution)[0];
+  const weakest = [...healthScoreBreakdown.value].sort((left, right) => left.contribution - right.contribution)[0];
+
+  return [
+    `当前健康总分为 ${dashboard.value.profile.healthScore} 分，系统判定为“${dashboard.value.profile.riskLevel}”，这张图对应报告中 7 维加权评分机制。`,
+    `贡献最高的是 ${strongest.label}（${formatNumber(strongest.contribution, 1)} 分），当前最拖后的是 ${weakest.label}（${formatNumber(weakest.contribution, 1)} 分）。`,
+    `如果想更快提升总分，优先修正低贡献项，通常会比继续堆高优势项更有效。`,
+  ];
+});
+
+const lifestyleRadarMetrics = computed(() => {
+  if (!dashboard.value) return [];
+
+  const { profile, summary, macros } = dashboard.value;
+  const proteinProgress = (macros || []).find((item) => item.label === '蛋白质');
+
+  return [
+    {
+      label: 'BMI',
+      score: bmiHealthScore(profile.bmi),
+      current: `BMI ${formatNumber(profile.bmi, 1)}`,
+    },
+    {
+      label: '睡眠',
+      score: clampNumber(summary.sleepScore, 0, 100),
+      current: `${formatNumber(summary.sleepHours, 1)} h`,
+    },
+    {
+      label: '步数',
+      score: ratioToHundred(summary.steps, summary.stepTarget),
+      current: `${summary.steps}/${summary.stepTarget} 步`,
+    },
+    {
+      label: '饮水',
+      score: ratioToHundred(summary.water, summary.waterTarget),
+      current: `${summary.water}/${summary.waterTarget} ml`,
+    },
+    {
+      label: '训练',
+      score: ratioToHundred(summary.workoutMinutes, summary.workoutTarget),
+      current: `${summary.workoutMinutes}/${summary.workoutTarget} min`,
+    },
+    {
+      label: '热量控制',
+      score: targetBalanceScore(summary.calories, summary.calorieTarget),
+      current: `${summary.calories}/${summary.calorieTarget} kcal`,
+    },
+    {
+      label: '蛋白质',
+      score: ratioToHundred(proteinProgress?.value || 0, proteinProgress?.target || 0),
+      current: `${proteinProgress?.value || 0}/${proteinProgress?.target || 0} g`,
+    },
+    {
+      label: '压力恢复',
+      score: 100 - clampNumber(summary.stressScore, 0, 100),
+      current: `压力 ${summary.stressScore}`,
+    },
+  ].map((item) => ({
+    ...item,
+    score: Number(item.score.toFixed(1)),
+  }));
+});
+
+const lifestyleRadarOption = computed(() => ({
+  tooltip: {
+    formatter: () =>
+      lifestyleRadarMetrics.value
+        .map((item) => `${item.label}：${formatNumber(item.score, 1)} 分（${item.current}）`)
+        .join('<br/>'),
+  },
+  radar: {
+    radius: '62%',
+    center: ['50%', '52%'],
+    splitNumber: 4,
+    axisName: { color: '#52615a' },
+    splitLine: { lineStyle: { color: '#ddd6c4' } },
+    splitArea: {
+      areaStyle: {
+        color: ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.24)'],
+      },
+    },
+    axisLine: { lineStyle: { color: '#d8d6ca' } },
+    indicator: lifestyleRadarMetrics.value.map((item) => ({
+      name: item.label,
+      max: 100,
+    })),
+  },
+  series: [
+    {
+      type: 'radar',
+      data: [
+        {
+          value: lifestyleRadarMetrics.value.map((item) => item.score),
+          name: '当前状态',
+          lineStyle: { color: '#27465a', width: 3 },
+          itemStyle: { color: '#27465a' },
+          areaStyle: { color: 'rgba(39, 70, 90, 0.18)' },
+          symbolSize: 7,
+        },
+      ],
+    },
+  ],
+}));
+
+const lifestyleRadarInsights = computed(() => {
+  if (!lifestyleRadarMetrics.value.length) return [];
+
+  const weakItems = lifestyleRadarMetrics.value
+    .filter((item) => item.score < 70)
+    .sort((left, right) => left.score - right.score);
+  const strongItems = lifestyleRadarMetrics.value
+    .filter((item) => item.score >= 85)
+    .sort((left, right) => right.score - left.score);
+
+  return [
+    `这张图把报告里反复强调的 BMI、睡眠、步数、饮水、训练、热量、蛋白质和压力放到了同一坐标系里。`,
+    weakItems.length
+      ? `当前最需要优先干预的是 ${weakItems.slice(0, 3).map((item) => item.label).join('、')}，这些维度会直接影响风险判断与健康评分。`
+      : '当前各维度都保持在相对稳健的区间，接下来更重要的是把稳定状态持续下去。',
+    strongItems.length
+      ? `目前表现最稳的是 ${strongItems.slice(0, 2).map((item) => item.label).join('、')}，这些可以作为后续巩固节奏的基础。`
+      : '暂时还没有特别突出的优势项，说明当前更适合做均衡、持续的小步调整。',
+  ];
+});
+
 const trendOption = computed(() => ({
   backgroundColor: 'transparent',
   tooltip: { trigger: 'axis' },
@@ -2847,6 +3093,25 @@ function correlation(left, right) {
   const denominator = Math.sqrt(leftVariance * rightVariance);
   if (!denominator) return 0;
   return numerator / denominator;
+}
+
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value || 0)));
+}
+
+function ratioToHundred(value, target) {
+  if (!target || Number(target) <= 0) return 100;
+  return clampNumber((Number(value || 0) * 100) / Number(target), 0, 100);
+}
+
+function targetBalanceScore(value, target) {
+  if (!target || Number(target) <= 0) return 100;
+  const gapRatio = Math.abs(Number(value || 0) - Number(target)) / Number(target);
+  return clampNumber(100 - gapRatio * 100, 0, 100);
+}
+
+function bmiHealthScore(bmi) {
+  return clampNumber(Math.max(45, 100 - Math.abs(Number(bmi || 0) - 22) * 12), 0, 100);
 }
 
 function sumCounts(items, key) {
